@@ -88,38 +88,39 @@ recordings; it needs the `raw_*.zip` archives and considerably more time and sto
 
 | Paper item | Lightweight command | Principal check |
 |---|---|---|
-| Fig. 3 | `python scripts/reproduce_fig3.py` | m = 2 selected; G(2) = 0.5595, G(4) = 0.5669 |
-| Fig. 4 | `python scripts/reproduce_fig4.py` | L = 9 cm; G_min = 0.3897924079274487; bootstrap 4991/5000 |
+| Fig. 3 | `python scripts/reproduce_fig3.py` | $m = 2$ selected; $G(2) = 0.5595$, $G(4) = 0.5669$ |
+| Fig. 4 | `python scripts/reproduce_fig4.py` | $L = 9$ cm; $G_{\mathrm{min}} = 0.3897924079274487$; bootstrap 4991/5000 |
 | Fig. 5 | `python scripts/reproduce_fig5.py` | short-term repeatability red 0.94 / green 0.77; Fig. 5d/e bootstrap CIs |
 | Fig. 6 | `python scripts/reproduce_fig6.py` | red AUC 0.953651, EER 0.064286; Top-1 15/15, 119/120, joint 14/15 |
 | Fig. 7 | `python scripts/reproduce_fig7.py` | 80 units: 77 Valid / 3 Partial / 0 Failed; revocation margin 0.386 |
-| Fig. 8 | `python scripts/reproduce_fig8.py` | Delta S_A: replay 0.94, ridge 0.80, kernel ridge 0.79, RFF 0.64; Top-1 lift <= 1 |
-| Fig. S2 | `python scripts/reproduce_supp_fig_s2.py` | RG_C 0.109-0.551; RG_device 0.60-0.69 |
+| Fig. 8 | `python scripts/reproduce_fig8.py` | $\Delta S_A$: replay 0.94, ridge 0.80, kernel ridge 0.79, RFF 0.64; Top-1 lift $\le 1$ |
+| Fig. S2 | `python scripts/reproduce_supp_fig_s2.py` | $RG_C$ 0.109-0.551; $RG_{\mathrm{device}}$ 0.60-0.69 |
 | Fig. S3 | `python scripts/reproduce_supp_fig_s3.py` | five source-to-target matrices equal the frozen tables |
-| Fig. S4 | `python scripts/reproduce_supp_fig_s4.py` | ridge N_L = 96 matrix; d_PCA = 15/31/63/64 |
-| Supplementary Note 7.1 | `python scripts/reproduce_threshold_development.py` | T_G = 0.12899641700197656, n_req = 7; 26/30, 19/20 |
+| Fig. S4 | `python scripts/reproduce_supp_fig_s4.py` | ridge $N_L = 96$ matrix; $d_{\mathrm{PCA}} = 15/31/63/64$ |
+| Supplementary Note 7.1 | `python scripts/reproduce_threshold_development.py` | $T_G = 0.12899641700197656$, $n_{\mathrm{req}} = 7$; 26/30, 19/20 |
 
 The full mapping (configs, required Zenodo files, raw-mode pipelines) is in
 [docs/FIGURE_MAP.md](docs/FIGURE_MAP.md).
 
 ## Analysis notes
 
-* The SLM macro-pixel size m = 2 (Fig. 3) and the fiber length L = 9 cm (Fig. 4) are the
-  operating parameters of all later experiments. Fig. 4 selects L by the maximin robust gap
-  G_min(L) = min[Q05(S_intra) - Q95(S_inter,c), Q05(S_intra) - Q95(S_inter,d)] on cross-round
-  scores, with a hierarchical bootstrap (device, then challenge within device; B = 5000, seed
-  20260721). The PSD entropy H_PSD (Fig. 4e) is complementary spatial-frequency
-  characterization and is not part of the selection criterion.
+* The SLM macro-pixel size $m = 2$ (Fig. 3) and the fiber length $L = 9$ cm (Fig. 4) are the
+  operating parameters of all later experiments. Fig. 4 selects $L$ by the maximin robust gap
+  $$G_{\mathrm{min}}(L)=\min\bigl[Q_{5\%}(S_{\mathrm{intra}})-Q_{95\%}(S_{\mathrm{inter},c}),\ Q_{5\%}(S_{\mathrm{intra}})-Q_{95\%}(S_{\mathrm{inter},d})\bigr]$$
+  on cross-round scores, with a hierarchical bootstrap (device, then challenge within device;
+  $B = 5000$, seed 20260721). The PSD entropy $H_{\mathrm{PSD}}$ (Fig. 4e) is complementary
+  spatial-frequency characterization and is not part of the selection criterion.
 * Similarity is the signed zero-mean normalized cross-correlation on the masked, envelope-
-  normalized, common-component-removed response (range [-1, 1]; no absolute value, no image
+  normalized, common-component-removed response (range $[-1, 1]$; no absolute value, no image
   registration).
 * The threshold-development dataset (Supplementary Note 7.1; 15 devices, states S0-S2, eight
   challenges) and the formal 80-unit experiment (Fig. 7-8; 10 devices, states M0-M7, 128
-  challenges) use different common-component protocols. The operating point T_G = 0.129 and
-  n_req = 7 belongs to Note 7.1 only; the Fig. 7 unit classes (Valid / Partial / Failed) are
-  defined by RG_C, Top-1 and EER of each unit and do not use T_G or n_req. In the formal
-  experiment the common component is estimated from the Round-A enrollment responses only and
-  applied unchanged to Round B and to cross-state queries.
+  challenges) use different common-component protocols. The operating point $T_G = 0.129$ and
+  $n_{\mathrm{req}} = 7$ belongs to Note 7.1 only; the Fig. 7 unit classes (Valid / Partial /
+  Failed) are defined by $RG_C$, Top-1 and EER of each unit and do not use $T_G$ or
+  $n_{\mathrm{req}}$. In the formal experiment the common component is estimated from the
+  Round-A enrollment responses only and applied unchanged to Round B and to cross-state
+  queries.
 * The red identity descriptor (Fiber-ID) has nine active features. Exact replay in Fig. 8 is a
   digital enrollment-database replay benchmark, not a physical clone ([docs/ATTACK_MODELS.md](docs/ATTACK_MODELS.md)).
 * Preprocessing differs between datasets and is summarized in [docs/PREPROCESSING.md](docs/PREPROCESSING.md).
@@ -134,8 +135,14 @@ dataset.
 
 ## Citation
 
-See [CITATION.cff](CITATION.cff). Please cite the manuscript and the dataset DOI
-10.5281/zenodo.22267156; the software DOI of the archived release will be added here.
+See [CITATION.cff](CITATION.cff). Please cite the manuscript together with the archived dataset
+and the archived code version.
+
+The experimental dataset is archived on Zenodo at
+[10.5281/zenodo.22267156](https://doi.org/10.5281/zenodo.22267156).
+
+The code version associated with the reported analyses (v1.0.0) is archived on Zenodo at
+[10.5281/zenodo.22274472](https://doi.org/10.5281/zenodo.22274472).
 
 ## License
 

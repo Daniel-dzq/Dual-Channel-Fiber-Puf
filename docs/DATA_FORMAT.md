@@ -59,7 +59,7 @@ Some analysis-ready files keep the numbering of the pipeline that produced them:
 (`figure3e_standard_puf_metrics.csv` = Fig. 6d binary PUF metrics), and
 `fiber_id_9d/fig6`, `fig6e`, `fig7`, `lifecycle` follow the paper numbering.
 `threshold_development/tau_G.json` (0.1653) is the descriptive development EER threshold of the
-`threshold_development` pipeline and is not the Supplementary Note 7.1 operating point T_G = 0.129, which is
+`threshold_development` pipeline and is not the Supplementary Note 7.1 operating point $T_G$ = 0.129, which is
 stored in `fiber_id_9d/lifecycle/threshold_development.json` (`tau_G_frozen`, `n_req_frozen`).
 `fiber_length/` holds the frozen pre-final fiber-length run; the Fig. 4 authority is
 `Source_Data/Fig4/`.

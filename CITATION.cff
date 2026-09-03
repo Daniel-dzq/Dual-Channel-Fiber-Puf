@@ -4,6 +4,7 @@ type: software
 title: "Dual-channel fiber physical unclonable functions with persistent identity and reconfigurable credentials - analysis code"
 version: 1.0.0
 license: MIT
+doi: 10.5281/zenodo.22274472
 repository-code: "https://github.com/Daniel-dzq/Dual-Channel-Fiber-Puf"
 authors:
   - family-names: Dai
@@ -34,6 +35,9 @@ keywords:
   - authentication
   - reconfigurable credentials
 identifiers:
+  - type: doi
+    value: 10.5281/zenodo.22274472
+    description: Software version 1.0.0 archived on Zenodo
   - type: doi
     value: 10.5281/zenodo.22267156
     description: Dataset (Source Data, analysis-ready tables, challenge libraries, calibration and raw recordings)
