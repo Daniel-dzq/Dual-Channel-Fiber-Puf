@@ -106,7 +106,15 @@ The full mapping (configs, required Zenodo files, raw-mode pipelines) is in
 
 * The SLM macro-pixel size $m = 2$ (Fig. 3) and the fiber length $L = 9$ cm (Fig. 4) are the
   operating parameters of all later experiments. Fig. 4 selects $L$ by the maximin robust gap
-  $$G_{\mathrm{min}}(L)=\min\bigl[Q_{5\%}(S_{\mathrm{intra}})-Q_{95\%}(S_{\mathrm{inter},c}),\ Q_{5\%}(S_{\mathrm{intra}})-Q_{95\%}(S_{\mathrm{inter},d})\bigr]$$
+
+$$
+G_{\min}(L)=\min[
+Q_{0.05}(S_{\mathrm{intra}})-Q_{0.95}(S_{\mathrm{inter},c}),
+\;
+Q_{0.05}(S_{\mathrm{intra}})-Q_{0.95}(S_{\mathrm{inter},d})
+].
+$$
+
   on cross-round scores, with a hierarchical bootstrap (device, then challenge within device;
   $B = 5000$, seed 20260721). The PSD entropy $H_{\mathrm{PSD}}$ (Fig. 4e) is complementary
   spatial-frequency characterization and is not part of the selection criterion.
