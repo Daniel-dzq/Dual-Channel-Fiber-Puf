@@ -1,0 +1,57 @@
+cff-version: 1.2.0
+message: "If you use this code, please cite the manuscript and the software version below."
+type: software
+title: "Dual-channel fiber physical unclonable functions with persistent identity and reconfigurable credentials - analysis code"
+version: 1.0.0
+license: MIT
+authors:
+  - family-names: Dai
+    given-names: Ziqi
+    affiliation: School of Science, Minzu University of China
+  - family-names: Zhang
+    given-names: Yaxin
+    affiliation: School of Science, Minzu University of China
+  - family-names: Kang
+    given-names: Lu
+    affiliation: School of Science, Minzu University of China
+  - family-names: Li
+    given-names: Chuanbo
+    affiliation: School of Science, Minzu University of China
+  - family-names: Guo
+    given-names: Honglian
+    affiliation: School of Science, Minzu University of China
+  - family-names: Lv
+    given-names: Min
+    affiliation: School of Science, Minzu University of China
+  - family-names: Tang
+    given-names: Xin
+    affiliation: School of Science, Minzu University of China
+keywords:
+  - physical unclonable function
+  - optical fiber
+  - speckle
+  - authentication
+  - reconfigurable credentials
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.22267156
+    description: Dataset (Source Data, analysis-ready tables, challenge libraries, calibration and raw recordings)
+preferred-citation:
+  type: article
+  title: "Dual-channel fiber physical unclonable functions with persistent identity and reconfigurable credentials"
+  authors:
+    - family-names: Dai
+      given-names: Ziqi
+    - family-names: Zhang
+      given-names: Yaxin
+    - family-names: Kang
+      given-names: Lu
+    - family-names: Li
+      given-names: Chuanbo
+    - family-names: Guo
+      given-names: Honglian
+    - family-names: Lv
+      given-names: Min
+    - family-names: Tang
+      given-names: Xin
+  status: submitted

@@ -1,0 +1,26 @@
+# Fixed m=2 binary challenge library `m2_128_v1` (C001-C128) used for Fig. 7-8.
+# C001-C008 preserve the exact bytes of the eight canonical Fig. 3-6 patterns shipped in
+# data/challenge_patterns/mp002/; C009-C128 are generated deterministically from master_seed.
+# Paths are relative to the repository root.
+
+version: m2_128_v1
+master_seed: 20260719
+n_challenges: 128
+overwrite: false
+output_root: outputs/challenges/m2_128_v1
+canonical_source_glob: data/challenge_patterns/mp002/mp002_C{idx:02d}.png
+
+geometry:
+  macro_pixel_size: 2
+  canvas_width_px: 1024
+  canvas_height_px: 768
+  active_width_px: 512
+  active_height_px: 512
+  active_offset_x_px: 256
+  active_offset_y_px: 128
+  closed_level: 0
+  open_level: 255
+
+validation:
+  max_abs_hd_z: 3.5
+  max_abs_input_ncc: 0.02

@@ -1,0 +1,32 @@
+{
+  "title": "Dual-channel fiber physical unclonable functions with persistent identity and reconfigurable credentials - analysis code",
+  "upload_type": "software",
+  "version": "1.0.0",
+  "license": "MIT",
+  "description": "Analysis code accompanying the manuscript 'Dual-channel fiber physical unclonable functions with persistent identity and reconfigurable credentials': challenge generation, response preprocessing, zero-mean normalized cross-correlation and PUF-metric calculations, Fiber-ID identity features, statistical analysis, figure reproduction and enrollment-database disclosure attacks. Reproduces the principal analyses from the public dataset 10.5281/zenodo.22267156.",
+  "creators": [
+    { "name": "Dai, Ziqi", "affiliation": "School of Science, Minzu University of China" },
+    { "name": "Zhang, Yaxin", "affiliation": "School of Science, Minzu University of China" },
+    { "name": "Kang, Lu", "affiliation": "School of Science, Minzu University of China" },
+    { "name": "Li, Chuanbo", "affiliation": "School of Science, Minzu University of China" },
+    { "name": "Guo, Honglian", "affiliation": "School of Science, Minzu University of China" },
+    { "name": "Lv, Min", "affiliation": "School of Science, Minzu University of China" },
+    { "name": "Tang, Xin", "affiliation": "School of Science, Minzu University of China" }
+  ],
+  "keywords": [
+    "physical unclonable function",
+    "optical fiber",
+    "speckle",
+    "authentication",
+    "reconfigurable credentials",
+    "reproducibility"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "10.5281/zenodo.22267156",
+      "relation": "isSupplementTo",
+      "resource_type": "dataset",
+      "scheme": "doi"
+    }
+  ]
+}

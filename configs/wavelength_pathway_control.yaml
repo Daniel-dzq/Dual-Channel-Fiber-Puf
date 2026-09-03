@@ -1,0 +1,60 @@
+# Wavelength x injection-pathway control (Fig. 5c-e) - raw-video mode.
+# `paths.root` is resolved relative to the repository root. Extract
+# raw_wavelength_pathway.zip into data/raw/wavelength_pathway/ (60 MP4 files).
+
+experiment_id: wavelength_pathway_control
+
+paths:
+  root: .
+  videos_root: data/raw/wavelength_pathway
+  output_dir: outputs/wavelength_pathway
+  dark_video: null   # no true dark; edge-median background estimate is used
+
+# Attribution premises are set by the experimenter; the code never infers them.
+attribution:
+  fixed_input_pattern_confirmed: false
+  same_camera_geometry_confirmed: false
+  same_package_state_confirmed: false
+  comparable_polarization_confirmed: false
+  comparable_optical_path_documented: false
+
+analysis:
+  analysis_start_s: 5.0
+  analysis_end_margin_s: 5.0
+  max_sampled_frames: 60
+  minimum_retained_frames: 24
+  n_temporal_blocks: 3
+
+  crop_size_px: 512
+  analysis_inner_size_px: 384
+  envelope_sigma_px: 42.0
+  epsilon: 1.0
+
+  background_edge_fraction: 0.08
+  centroid_smooth_sigma_px: 24.0
+
+  high_frequency_threshold_cyc_per_px: 0.1
+  bootstrap_iterations: 10000
+  bootstrap_seed: 42
+  mixed_model_enabled: true
+
+qc:
+  saturation_warning_fraction: 0.02
+  minimum_retained_frames: 24
+  minimum_roi_coverage: 0.95
+  minimum_signal_to_background_ratio: 5.0
+  dark_fraction_warning: 0.50
+  max_centroid_border_margin_px: 16.0
+
+sensitivity:
+  crop_inner_pairs:
+    - [384, 320]
+    - [640, 512]
+  envelope_sigmas_px: [32.0, 42.0, 64.0]
+
+expected:
+  n_fibers: 5
+  n_wavelengths: 2
+  n_geometries: 2
+  n_repeats: 3
+  n_videos: 60

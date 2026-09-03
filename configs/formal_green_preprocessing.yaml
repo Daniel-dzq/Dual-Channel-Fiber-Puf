@@ -1,0 +1,90 @@
+# Green-channel preprocessing, representation and attack-model hyperparameters shared by the
+# formal 80-unit pipeline (Fig. 7-8) and the attack tracks (Supplementary Table S12).
+# Protocol: fixed challenge bank C001-C128, Round A enrollment / Round B independent query.
+# Paths are relative to the repository root.
+
+project_root: .
+videos_root: data/raw/formal
+challenge_root: data/zenodo/challenges_calibration_masks/challenges/patterns
+lifecycle_run: outputs/lifecycle_threshold_development
+output_root: outputs/formal
+reuse_vector_cache_from: null
+
+device_id: F01
+source_device_id: F01
+
+states: [M0, M1, M2, M3, M4, M5, M6, M7]
+rounds: [A, B]
+
+challenge_ids:
+  start: 1
+  end: 128
+
+video_protocol:
+  nominal_duration_s: 8.0
+  use_all_decoded_frames: true
+  discard_head_s: 0.0
+  discard_tail_s: 0.0
+  minimum_duration_s: 7.5
+  maximum_duration_s: 10.5
+  minimum_frames_used: 20
+
+qc_thresholds:
+  duration_warn_below_s: 7.5
+  duration_error_below_s: 5.0
+  duration_warn_above_s: 10.5
+  saturation_warn_fraction: 0.02
+  saturation_error_fraction: 0.10
+  half_split_ncc_warn_below: 0.85
+  half_split_ncc_error_below: 0.5
+  relative_intensity_drift_warn: 0.15
+  relative_intensity_drift_error: 0.40
+  centroid_drift_warn_px: 5.0
+  centroid_drift_error_px: 20.0
+  min_frames_used_error_below: 20
+
+preprocessing:
+  dark_mode: none            # no dark subtraction in the formal experiment
+  envelope_sigma: 42
+  envelope_epsilon: 1
+  primary_representation: fullres_detail_cm_enrollment_frozen
+  optional_representation: fullres_detail
+
+pca:
+  dimension: 64
+
+models:
+  mean_baseline: true
+  exact_template_replay: true
+  ridge: true
+  kernel_ridge: true
+  random_fourier_ridge: true
+  small_mlp: true
+  # Fixed hyperparameters; never selected on Round B.
+  ridge_alpha: 10.0
+  kernel_ridge_alpha: 1.0
+  kernel_ridge_gamma: 0.01
+  rff_n_components: 256
+  rff_gamma: 0.01
+  rff_alpha: 1.0
+  mlp_hidden_sizes: [64, 32]
+  mlp_max_iter: 150
+  mlp_learning_rate: 0.001
+  mlp_random_seed: 20260721
+
+bootstrap:
+  n_resamples: 5000
+  unit: challenge_bank
+  bank_size: 8
+  seed: 20260721
+
+evaluation:
+  batch_size: 32
+  track_b_parallel_targets: 1
+  track_d_parallel_targets: 1
+
+output:
+  make_figures: false
+  save_predictions: true
+  save_models: false
+  save_fullres_templates: true

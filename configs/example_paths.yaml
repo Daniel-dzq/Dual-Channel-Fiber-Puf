@@ -1,0 +1,11 @@
+# Local path settings. Copy to configs/paths.yaml (git-ignored) or export the two
+# environment variables; every script also accepts --data-root / --output-root.
+#
+#   export PUF_DATA_ROOT=/path/to/zenodo_dataset     # directory holding the Zenodo download
+#   export PUF_OUTPUT_ROOT=./outputs                  # where reproduction results are written
+#
+# The Zenodo record (10.5281/zenodo.22267156) may be left as downloaded (zip archives) or
+# extracted in place; both layouts are read. Nothing is ever written into data_root.
+
+data_root: /path/to/zenodo_dataset
+output_root: ./outputs

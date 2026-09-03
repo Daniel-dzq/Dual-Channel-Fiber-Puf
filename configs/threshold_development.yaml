@@ -1,0 +1,93 @@
+# Eight-challenge threshold-development dataset (Supplementary Note 7.1; 15 devices x 3 states).
+# This is the descriptive threshold_development pipeline whose outputs are published under
+# analysis_ready_data/threshold_development/. The S7.1 operating point (T_G, n_req) is
+# produced by the lifecycle pipeline (configs/lifecycle_threshold_development.yaml).
+# `paths.root` is resolved relative to the repository root. Run
+# `python scripts/prepare_raw_workspace.py` to extract raw_threshold_development.zip
+# into data/raw/threshold_development/ and write a local experiment3_metadata.csv.
+
+experiment:
+  name: experiment3_identity_state_puf
+  num_devices: 15
+  device_ids: [F01, F02, F03, F04, F05, F06, F07, F08, F09, F10, F11, F12, F13, F14, F15]
+  state_ids: [S0, S1, S2]
+  round_ids: [A, B]
+  challenge_ids: [C01, C02, C03, C04, C05, C06, C07, C08]
+  enrollment_state: S0
+  query_states: [S1, S2]
+
+splits:
+  development_devices: [F01, F02, F03, F04, F05]
+  frozen_test_devices: [F06, F07, F08, F09, F10, F11, F12, F13, F14, F15]
+  pilot_development_only: false
+
+acquisition:
+  expected_frame_rate_fps: 10.0
+  recording_duration_s: 25.0
+  discard_head_s: 10.0
+  discard_tail_s: 10.0
+  num_time_blocks: 3
+  block_aggregation: median
+  recording_aggregation: median
+  expected_frame_width_px: null
+  expected_frame_height_px: null
+
+analysis:
+  envelope_sigma_px: 42.0
+  envelope_eps: 1.0
+  feature_type: detail_cm
+  preprocessing_version: threshold_development_v1
+  saturation_threshold: 250.0
+  max_saturation_fraction: 0.02
+  min_mean_intensity: 1.0
+  min_mask_coverage: 0.05
+  min_image_variance: 1.0e-6
+  valid_mask_percentile: 10.0
+  valid_mask_abs_floor: 5.0
+  red_primary_repr: lowdim_stats
+  red_primary_distance: euclidean
+  red_primary_pca_dim: null
+  psd_radial_bins: 24
+  frequency_bands:
+    low: [0.00, 0.15]
+    mid: [0.15, 0.35]
+    high: [0.35, 0.50]
+
+dark_frame:
+  allow_missing_dark: true
+  dark_video: null
+  dark_artifact: null
+  aggregation: mean
+  cache_path: outputs/threshold_development/templates/dark/dark_cache.npz
+
+camera:
+  roi: null
+  color_format: opencv_bgr
+  channel_convention: opencv_bgr
+
+statistics:
+  random_seed: 42
+  bootstrap_iterations: 2000
+  permutation_iterations: 1000
+  min_devices_for_frozen_test: 6
+  min_devices_for_top3: 3
+  min_devices_for_bootstrap: 5
+  min_devices_for_permutation: 5
+
+quality_control:
+  strict_mode: false
+  reject_on_saturation: true
+  reject_on_absent_signal: true
+  reject_on_wrong_resolution: true
+  reject_on_insufficient_frames: true
+
+thresholds:
+  selection_mode: eer_development
+  tau_R: null
+  tau_G: null
+
+paths:
+  root: .
+  metadata_csv: data/raw/threshold_development/experiment3_metadata.csv
+  output_dir: outputs/threshold_development
+  videos_root: data/raw/threshold_development

@@ -1,0 +1,58 @@
+# Macro-pixel screening (Fig. 3, Supplementary Table S6) - raw-video mode.
+# `experiment.root_dir` is resolved relative to this file. Extract
+# raw_macro_pixel.zip into data/raw/macro_pixel/videos/ so that
+# data/raw/macro_pixel/videos/mp001/1.mp4 ... and videos/dark/dark.mp4 exist.
+
+slm:
+  canvas_width: 1024
+  canvas_height: 768
+  center_x: 512
+  center_y: 384
+  active_width: 512
+  active_height: 512
+  gray_off: 0
+  gray_on: 255
+  monitor_index: 1
+  backend: save_only
+
+experiment:
+  macro_pixel_sizes: [1, 2, 4, 8, 16, 32, 64]
+  challenge_ids: ["1", "2", "3", "4", "5", "6", "7", "8"]
+  challenge_names: [A, B]
+  num_loads_per_challenge: 2
+  global_seed: 20260711
+  input_hd_min: 0.45
+  input_hd_max: 0.55
+  settle_time_ms: 500
+  video_duration_seconds: 30
+  root_dir: ../data/raw/macro_pixel
+
+camera:
+  backend: manual_video
+  camera_index: 0
+  roi: null
+  requested_fps: 30
+  exposure: null
+  gain: null
+  output_mode: frames
+  output_codec: FFV1
+
+analysis:
+  mode: green_only
+  window_edges_seconds: [3.0, 11.0, 19.0, 27.0]
+  frames_per_window: 70
+  # Public dark reference (challenges_calibration_masks.zip -> calibration/), relative to root_dir.
+  dark_artifact_path: ../../zenodo/challenges_calibration_masks/calibration/dark_reference_2048x1536.npz
+  dark_video_path: null
+  dark_green_scalar: 0.0
+  valid_mask_path: null
+  valid_mask_percentile: 10.0
+  valid_mask_abs_floor: 5.0
+  envelope_sigma_px: null
+  envelope_sigma_factor: 4.0
+  envelope_eps: 1.0
+  sensitivity_sigma_factors: [3.0, 4.0, 5.0]
+  saturation_threshold: 250
+  max_green_saturation: 0.005
+  min_intra_median_detail: 0.80
+  allow_partial_macros: true

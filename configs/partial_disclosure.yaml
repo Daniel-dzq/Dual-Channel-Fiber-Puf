@@ -1,0 +1,71 @@
+# Partial enrollment-database disclosure (Fig. 8c, Supplementary Fig. S4; Tracks C-PL / D-PL).
+# Threat model: the attacker obtains N_L of the 128 enrolled server-side templates of one
+# device-state unit and must predict the withheld N_H responses. Hidden-challenge templates,
+# Round B and target-state data are never used for fitting or selection.
+# Paths are relative to the repository root; base_run must be a completed formal run.
+
+protocol: partial_leakage_registered_bank_v1
+
+base_run: outputs/formal/runs/<FORMAL_RUN_ID>
+project_root: null
+videos_root: data/raw/formal
+challenge_root: data/zenodo/challenges_calibration_masks/challenges
+challenge_manifest_csv: data/zenodo/challenges_calibration_masks/challenges/challenge_manifest.csv
+hamming_distance_csv: data/zenodo/challenges_calibration_masks/challenges/pairwise_hamming_distance.csv
+challenge_library_yaml: configs/challenge_library.yaml
+shared_cache_root: outputs/formal/_shared_cache
+output_root: outputs/formal/runs/<FORMAL_RUN_ID>/supplementary/partial_leakage
+figure_data_root: outputs/formal/figure_data
+
+devices: [F01, F02, F03, F04, F05, F06, F07, F08, F09, F10]
+states: [M0, M1, M2, M3, M4, M5, M6, M7]
+challenge_id_start: 1
+challenge_id_end: 128
+
+# Split design: 16 banks of 8 challenges; bank-balanced nested disclosed/hidden partitions.
+n_banks: 16
+bank_size: 8
+leak_sizes: [16, 32, 64, 96]
+per_bank_leak_counts: [1, 2, 4, 6]
+repetitions: 5
+seeds: [20260801, 20260802, 20260803, 20260804, 20260805]
+bank_balanced: true
+nested_splits: true
+
+# Frozen representation / model hyperparameters (Supplementary Table S12).
+pca_dimension_max: 64
+models:
+  mean_leaked_response: true
+  nearest_leaked_challenge: true
+  ridge: true
+  kernel_ridge: true
+  random_fourier_ridge: true
+  small_mlp: true
+  ridge_alpha: 10.0
+  kernel_ridge_alpha: 1.0
+  kernel_ridge_gamma: 0.01
+  rff_n_components: 256
+  rff_gamma: 0.01
+  rff_alpha: 1.0
+  mlp_hidden_sizes: [64, 32]
+  mlp_max_iter: 150
+  mlp_learning_rate: 0.001
+  mlp_random_seed: 20260721
+  pl1_distance_metric: normalized_hamming
+
+bootstrap_iterations: 10000
+bootstrap_seed: 42
+statistic_unit: device_cluster
+
+# Pre-registered representative condition for the Fig. S4a heat map.
+representative_condition:
+  leak_size: 96
+  attack_method: ridge_clone
+  rationale: >
+    exact_template_replay is inapplicable to withheld registered challenges; ridge regression is
+    the strongest regression-based reconstruction in the complete-disclosure evaluation and is
+    fixed here regardless of the partial-disclosure outcome.
+
+performance:
+  device_workers: 1
+  blas_threads_hint: 4

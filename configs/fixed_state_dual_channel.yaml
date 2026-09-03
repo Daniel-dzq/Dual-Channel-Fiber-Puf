@@ -1,0 +1,119 @@
+# Fixed-state dual-channel characterization (Fig. 5a,b; Fig. 6; Tables S8, S10, S11) - raw-video mode.
+# `paths.root` is resolved relative to the repository root. Run
+# `python scripts/prepare_raw_workspace.py` first: it extracts raw_fixed_state.zip
+# into data/raw/fixed_state/ and writes a local experiment2_metadata.csv there.
+
+experiment:
+  name: experiment2_dual_channel_characterization
+  num_devices: 15
+  device_ids: [F01, F02, F03, F04, F05, F06, F07, F08, F09, F10, F11, F12, F13, F14, F15]
+
+optics:
+  red_wavelength_nm: 650
+  green_wavelength_nm: 532
+
+slm:
+  display_width_px: 1024
+  display_height_px: 768
+  challenge_width_px: 512
+  challenge_height_px: 512
+  active_x: 256
+  active_y: 128
+  macro_size_px: 2
+  challenge_centering: centered
+  interpolation: nearest
+  num_challenges: 8
+  challenge_ids: [C01, C02, C03, C04, C05, C06, C07, C08]
+  representative_challenge_id: C01
+  representative_figure_challenges: [C01, C03, C05, C07]
+
+acquisition:
+  # Camera stream is ~6.4 fps (OpenCV-reported); trimming uses the measured FPS per video.
+  expected_frame_rate_fps: 6.4
+  recording_duration_s: 30
+  discard_head_s: 10
+  discard_tail_s: 10
+  effective_duration_s: 8
+  num_time_blocks: 3
+  block_aggregation: median
+  recording_aggregation: median
+
+channels:
+  red:
+    illumination_mode: red_only
+    source_channel: red
+  green:
+    illumination_mode: green_only
+    source_channel: green
+
+alignment:
+  enabled: false
+  mode: fixed_geometry_only
+
+statistics:
+  random_seed: 42
+  bootstrap_iterations: 10000
+
+analysis:
+  envelope_sigma_px: 42.0
+  envelope_eps: 1.0
+  feature_type: detail_cm
+  preprocessing_version: fixed_state_v1
+  saturation_threshold: 250.0
+  max_saturation_fraction: 0.02
+  min_mask_coverage: 0.05
+  min_image_variance: 1.0e-6
+  valid_mask_percentile: 10.0
+  valid_mask_abs_floor: 5.0
+
+dark_frame:
+  # Shared dark reference and valid mask published in challenges_calibration_masks.zip.
+  reuse_experiment1: true
+  experiment1_dark_artifact: ../../zenodo/challenges_calibration_masks/calibration/dark_reference_2048x1536.npz
+  experiment1_dark_video: null
+  experiment1_config: null
+  experiment1_valid_mask: ../../zenodo/challenges_calibration_masks/masks/exp01_exp02_valid_mask.png
+  aggregation: mean
+  strict_parameter_match: true
+  allow_missing_dark: false
+  cache_path: null
+  camera_settings:
+    frame_width_px: 2048
+    frame_height_px: 1536
+    bit_depth: 8
+    color_format: opencv_bgr
+    exposure_ms: null
+    gain: null
+    frame_rate_fps: null
+    camera_id: null
+    roi: null
+    channel_convention: opencv_bgr
+
+challenges:
+  # Eight canonical m=2 SLM patterns (C01-C08) shipped with this repository.
+  source_dir: ../../../data/challenge_patterns/mp002
+  pattern_glob: "mp002_C*.png"
+  macro_size_px: 2
+  duty_cycle_target: 0.5
+  duty_cycle_tolerance: 0.02
+  allowed_levels: [0, 255]
+
+camera:
+  roi: null
+  color_format: opencv_bgr
+  channel_convention: opencv_bgr
+
+figures:
+  representative_device_id: F01
+  representative_red_record: red_before
+  representative_green_challenge_id: C01
+  challenge_example_ids: [C01, C03, C05, C07]
+
+quality_control:
+  strict_mode: false
+
+paths:
+  root: data/raw/fixed_state
+  metadata_csv: experiment2_metadata.csv
+  output_dir: ../../../outputs/fixed_state
+  videos_root: .

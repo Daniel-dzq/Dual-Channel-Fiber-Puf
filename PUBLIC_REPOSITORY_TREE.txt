@@ -1,0 +1,269 @@
+dual-channel-fiber-puf/
+├── configs/
+│   ├── challenge_library.yaml
+│   ├── example_paths.yaml
+│   ├── fiber_length_optimization.yaml
+│   ├── fixed_state_dual_channel.yaml
+│   ├── formal_green_preprocessing.yaml
+│   ├── formal_reconfiguration.yaml
+│   ├── lifecycle_threshold_development.yaml
+│   ├── macro_pixel_screening.yaml
+│   ├── partial_disclosure.yaml
+│   ├── threshold_development.yaml
+│   └── wavelength_pathway_control.yaml
+├── data/
+│   ├── challenge_patterns/
+│   │   └── mp002/
+│   │       ├── mp002_C01.png
+│   │       ├── mp002_C02.png
+│   │       ├── mp002_C03.png
+│   │       ├── mp002_C04.png
+│   │       ├── mp002_C05.png
+│   │       ├── mp002_C06.png
+│   │       ├── mp002_C07.png
+│   │       └── mp002_C08.png
+│   └── threshold_development/
+│       ├── green_pair_scores_corrected.csv
+│       ├── lifecycle_events_corrected.csv
+│       └── README.md
+├── docs/
+│   ├── ATTACK_MODELS.md
+│   ├── DATA_FORMAT.md
+│   ├── FIGURE_MAP.md
+│   ├── PREPROCESSING.md
+│   └── REPRODUCIBILITY.md
+├── examples/
+│   └── minimal_workflow.py
+├── scripts/
+│   ├── prepare_raw_workspace.py
+│   ├── reproduce_fig3.py
+│   ├── reproduce_fig4.py
+│   ├── reproduce_fig5.py
+│   ├── reproduce_fig6.py
+│   ├── reproduce_fig7.py
+│   ├── reproduce_fig8.py
+│   ├── reproduce_supp_fig_s2.py
+│   ├── reproduce_supp_fig_s3.py
+│   ├── reproduce_supp_fig_s4.py
+│   ├── reproduce_threshold_development.py
+│   └── verify_public_data.py
+├── src/
+│   ├── e01/
+│   │   ├── analysis/
+│   │   │   ├── __init__.py
+│   │   │   ├── envelope.py
+│   │   │   ├── green_screening.py
+│   │   │   ├── metrics_basic.py
+│   │   │   ├── ncc.py
+│   │   │   └── plot_fig3.py
+│   │   ├── patterns/
+│   │   │   ├── __init__.py
+│   │   │   ├── canvas.py
+│   │   │   ├── challenges.py
+│   │   │   └── screening.py
+│   │   ├── utils/
+│   │   │   ├── __init__.py
+│   │   │   ├── hashing.py
+│   │   │   └── io_utils.py
+│   │   ├── __init__.py
+│   │   ├── cli.py
+│   │   ├── config.py
+│   │   └── naming.py
+│   ├── experiment00/
+│   │   ├── __init__.py
+│   │   ├── acquisition.py
+│   │   ├── authentication.py
+│   │   ├── bootstrap.py
+│   │   ├── cache.py
+│   │   ├── cli.py
+│   │   ├── config.py
+│   │   ├── discovery.py
+│   │   ├── leakage_audit.py
+│   │   ├── length_selection.py
+│   │   ├── mask.py
+│   │   ├── metadata.py
+│   │   ├── order_effect.py
+│   │   ├── plotting.py
+│   │   ├── preflight.py
+│   │   ├── preprocessing.py
+│   │   ├── public_scores.py
+│   │   ├── reporting.py
+│   │   ├── sanity_check.py
+│   │   ├── score_construction.py
+│   │   ├── sequence_balance.py
+│   │   ├── spatial_statistics.py
+│   │   ├── statistics.py
+│   │   ├── templates.py
+│   │   ├── validation.py
+│   │   └── video_processing.py
+│   ├── experiment02b/
+│   │   ├── __init__.py
+│   │   ├── channel_leakage.py
+│   │   ├── cli.py
+│   │   ├── config.py
+│   │   ├── factorial_statistics.py
+│   │   ├── manifest.py
+│   │   ├── pipeline.py
+│   │   ├── preprocessing.py
+│   │   ├── publication_figure.py
+│   │   ├── qc.py
+│   │   ├── reporting.py
+│   │   ├── spatial_acf.py
+│   │   ├── spatial_psd.py
+│   │   ├── temporal_stability.py
+│   │   └── video_io.py
+│   ├── experiment2/
+│   │   ├── __init__.py
+│   │   ├── analysis.py
+│   │   ├── binary_puf.py
+│   │   ├── challenge_validation.py
+│   │   ├── cli.py
+│   │   ├── closed_set_retrieval.py
+│   │   ├── config.py
+│   │   ├── figure_layout.py
+│   │   ├── fixed_state_analysis.py
+│   │   ├── fixed_state_metrics.py
+│   │   ├── metadata.py
+│   │   ├── score_construction.py
+│   │   └── video_processing.py
+│   ├── experiment3/
+│   │   ├── __init__.py
+│   │   ├── analysis.py
+│   │   ├── artifacts.py
+│   │   ├── cli.py
+│   │   ├── config.py
+│   │   ├── green_features.py
+│   │   ├── leakage_audit.py
+│   │   ├── metadata.py
+│   │   ├── plotting.py
+│   │   ├── progress.py
+│   │   ├── red_features.py
+│   │   ├── reporting.py
+│   │   ├── score_construction.py
+│   │   ├── splits.py
+│   │   ├── statistics.py
+│   │   ├── validation.py
+│   │   └── video_processing.py
+│   ├── experiment4_security/
+│   │   ├── challenges/
+│   │   │   ├── __init__.py
+│   │   │   ├── generator.py
+│   │   │   ├── manifest.py
+│   │   │   ├── plotting.py
+│   │   │   ├── schedule.py
+│   │   │   └── validator.py
+│   │   ├── common/
+│   │   │   ├── __init__.py
+│   │   │   ├── config.py
+│   │   │   ├── frozen_protocol.py
+│   │   │   ├── metadata.py
+│   │   │   ├── progress_util.py
+│   │   │   ├── qc.py
+│   │   │   └── video_io.py
+│   │   ├── identity_credential/
+│   │   │   ├── __init__.py
+│   │   │   ├── attack_evaluation.py
+│   │   │   ├── attack_models.py
+│   │   │   ├── bootstrap.py
+│   │   │   ├── cache_adapter.py
+│   │   │   ├── cache_store.py
+│   │   │   ├── cd_checkpoint.py
+│   │   │   ├── cli.py
+│   │   │   ├── config.py
+│   │   │   ├── credential_lifecycle.py
+│   │   │   ├── data_validation.py
+│   │   │   ├── dataset_layout.py
+│   │   │   ├── formal_run.py
+│   │   │   ├── gates.py
+│   │   │   ├── green_clone_tracks.py
+│   │   │   ├── green_database_tracks.py
+│   │   │   ├── green_multidevice_metrics.py
+│   │   │   ├── green_result_adapter.py
+│   │   │   ├── joint_decision.py
+│   │   │   ├── joint_episode_generation.py
+│   │   │   ├── leakage_audit.py
+│   │   │   ├── manifest.py
+│   │   │   ├── pipeline.py
+│   │   │   ├── red_capture_qc.py
+│   │   │   ├── red_conditioned_attack.py
+│   │   │   ├── red_feature_adapter.py
+│   │   │   ├── red_identity_enrollment.py
+│   │   │   ├── red_identity_evaluation.py
+│   │   │   ├── red_video_processing.py
+│   │   │   ├── reporting.py
+│   │   │   ├── run_registry.py
+│   │   │   ├── schemas.py
+│   │   │   └── threshold_freeze.py
+│   │   ├── lifecycle/
+│   │   │   ├── __init__.py
+│   │   │   ├── cli.py
+│   │   │   ├── discovery.py
+│   │   │   ├── evaluation.py
+│   │   │   ├── event_construction.py
+│   │   │   ├── green_credential.py
+│   │   │   ├── plotting.py
+│   │   │   ├── red_identity.py
+│   │   │   ├── reporting.py
+│   │   │   └── thresholds.py
+│   │   ├── ml_attack/
+│   │   │   ├── __init__.py
+│   │   │   ├── baselines.py
+│   │   │   ├── batch_eval.py
+│   │   │   ├── bootstrap.py
+│   │   │   ├── challenge_features.py
+│   │   │   ├── cli.py
+│   │   │   ├── config.py
+│   │   │   ├── enrollment.py
+│   │   │   ├── leakage_audit.py
+│   │   │   ├── manifest.py
+│   │   │   ├── metric_schema.py
+│   │   │   ├── metrics.py
+│   │   │   ├── models.py
+│   │   │   ├── pairing.py
+│   │   │   ├── partial_leakage_models.py
+│   │   │   ├── partial_leakage_pipeline.py
+│   │   │   ├── partial_leakage_reporting.py
+│   │   │   ├── partial_leakage_splits.py
+│   │   │   ├── reporting.py
+│   │   │   ├── representations.py
+│   │   │   ├── run.py
+│   │   │   ├── summaries.py
+│   │   │   ├── track_a_database_auth.py
+│   │   │   ├── track_b_template_revoke.py
+│   │   │   ├── track_c_clone.py
+│   │   │   ├── track_c_pl_partial_leakage.py
+│   │   │   ├── track_d_clone_transfer.py
+│   │   │   ├── track_d_pl_transfer.py
+│   │   │   └── video_preprocessing.py
+│   │   ├── __init__.py
+│   │   └── cli.py
+│   └── puf_common/
+│       ├── __init__.py
+│       ├── acf_features.py
+│       ├── channels.py
+│       ├── checks.py
+│       ├── dark.py
+│       ├── envelope.py
+│       ├── features.py
+│       ├── fiber_id.py
+│       ├── intensity_features.py
+│       ├── masks.py
+│       ├── metrics.py
+│       ├── ncc.py
+│       ├── progress.py
+│       ├── psd_features.py
+│       ├── public_data.py
+│       ├── statistics.py
+│       ├── texture_features.py
+│       └── tqdm_progress.py
+├── .gitignore
+├── .zenodo.json
+├── CHANGELOG.md
+├── CITATION.cff
+├── environment.yml
+├── LICENSE
+├── PUBLIC_CODE_MANIFEST.csv
+├── PUBLIC_REPOSITORY_TREE.txt
+├── pyproject.toml
+├── README.md
+└── requirements.txt

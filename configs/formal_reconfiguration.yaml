@@ -1,0 +1,36 @@
+# Formal 80-unit mechanical-reconfiguration pipeline (Fig. 7, Fig. 8a-b, Fig. S2-S3).
+# Paths are relative to the repository root (project_root = parent of configs/).
+# Extract raw_formal_F01.zip ... raw_formal_F10.zip into data/raw/formal/ so that
+# data/raw/formal/F01/M0/green/A/*.mp4 ... exist (identity_credential layout).
+
+project_root: null
+videos_root: data/raw/formal
+output_root: outputs/formal
+
+# Companion inputs (public dataset: challenges_calibration_masks.zip).
+valid_mask: data/zenodo/challenges_calibration_masks/masks/exp04_formal_valid_mask.npz
+green_preprocessing_config: configs/formal_green_preprocessing.yaml
+challenge_library_yaml: configs/challenge_library.yaml
+
+devices: [F01, F02, F03, F04, F05, F06, F07, F08, F09, F10]
+states: [M0, M1, M2, M3, M4, M5, M6, M7]
+challenge_id_start: 1
+challenge_id_end: 128
+
+# Red Fiber-ID standardizer is fitted on F01-F05 and applied unchanged to F06-F10.
+development_devices: [F01, F02, F03, F04, F05]
+heldout_devices: [F06, F07, F08, F09, F10]
+
+mode: prepare_only
+make_figures: false
+
+performance:
+  # Adjust to the local machine; these settings do not change the science.
+  n_video_workers: 4
+  n_io_threads: 4
+  track_b_parallel_targets: 1
+  track_d_parallel_targets: 1
+  green_device_parallel: 1
+  preload_round_b: true
+  batch_size: 64
+  blas_threads_hint: 4

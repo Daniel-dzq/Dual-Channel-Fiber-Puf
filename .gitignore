@@ -1,0 +1,35 @@
+# Data workspace (Zenodo archives, raw videos) and run outputs are never committed.
+data/zenodo/
+data/raw/
+outputs/
+results/
+cache/
+tmp/
+scratch/
+*.mp4
+*.avi
+*.mkv
+*.mov
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ipynb_checkpoints/
+.venv/
+venv/
+.env
+.env.*
+GITHUB_PUBLIC_CODE_RELEASE_REPORT.md
+SOFTWARE_RELEASE_NEXT_STEPS.md
+
+# Editors / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+configs/paths.yaml
