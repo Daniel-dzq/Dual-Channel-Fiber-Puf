@@ -16,6 +16,10 @@ credentials.* Ziqi Dai, Yaxin Zhang, Lu Kang, Chuanbo Li, Honglian Guo, Min Lv a
 School of Science, Minzu University of China. (Manuscript under review; publication DOI to be
 added.)
 
+## Repository
+
+[GitHub repository](https://github.com/Daniel-dzq/Dual-Channel-Fiber-Puf)
+
 ## Data
 
 Dataset: Dai et al., data for "Dual-channel fiber physical unclonable functions with persistent
@@ -57,7 +61,8 @@ examples/      minimal_workflow.py
 Python 3.11.15 is the reference version (Python >= 3.10 supported).
 
 ```bash
-git clone <repository-url> && cd dual-channel-fiber-puf
+git clone https://github.com/Daniel-dzq/Dual-Channel-Fiber-Puf.git
+cd Dual-Channel-Fiber-Puf
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 pip install -e .

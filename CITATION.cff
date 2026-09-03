@@ -4,6 +4,7 @@ type: software
 title: "Dual-channel fiber physical unclonable functions with persistent identity and reconfigurable credentials - analysis code"
 version: 1.0.0
 license: MIT
+repository-code: "https://github.com/Daniel-dzq/Dual-Channel-Fiber-Puf"
 authors:
   - family-names: Dai
     given-names: Ziqi
