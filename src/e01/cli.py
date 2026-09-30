@@ -26,7 +26,7 @@ def build_parser() -> argparse.ArgumentParser:
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--config", type=Path, required=True)
     common.add_argument("--force", action="store_true", help="Recompute even if outputs exist")
-    parser = argparse.ArgumentParser(description="Green-only macro-pixel screening", parents=[common])
+    parser = argparse.ArgumentParser(description="Green-only macro-pixel screening")
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("generate-screening", parents=[common], help="Regenerate the C01-C08 screening challenges and acquisition order")
     sub.add_parser("analyze-screening", parents=[common], help="Score the screening videos and rank macro-pixel sizes")

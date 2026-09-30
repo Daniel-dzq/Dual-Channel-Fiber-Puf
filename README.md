@@ -9,9 +9,9 @@ generation, response preprocessing, zero-mean normalized cross-correlation and P
 calculations, identity-feature extraction, statistical analysis, figure reproduction and
 enrollment-database disclosure attacks used in the paper.
 
-## Validation status
+## Workflows
 
-This branch contains input-provenance and publication-validation safeguards. It is not a verified full-publication reproduction release. Use the manifest-format data verification and threshold-development commands below for the corresponding candidate dataset. Full raw-to-figure reproduction and statistical-method validation remain incomplete.
+Use the supplied analysis tables for figure-level numerical reconstruction, or run the raw-video pipelines to recalculate responses and scores. See [raw-data workflows](docs/RAW_REPRODUCTION.md). These are separate operations; file-integrity checks do not replace scientific comparison of outputs.
 
 ## Paper
 
@@ -30,7 +30,7 @@ Dataset: Dai et al., data for "Dual-channel fiber physical unclonable functions 
 identity and reconfigurable credentials", Zenodo. DOI:
 [10.5281/zenodo.22267156](https://doi.org/10.5281/zenodo.22267156).
 
-The publication recording inventory comprises 22,147 labeled H.264 MP4 files, about 19.12 GiB. The candidate manifest-format dataset includes recordings, experimental challenge patterns, masks and threshold-development score tables. Complete panel source data remain subject to numerical validation. This repository contains no recordings; the code reads the dataset
+The publication recording inventory comprises 22,147 labeled H.264 MP4 files, about 19.12 GiB. The manifest-format dataset includes recordings, experimental challenge patterns, masks, analysis tables and figure source data. This repository contains no recordings; the code reads the dataset
 from a directory you choose (`--data-root` or `$PUF_DATA_ROOT`). See
 [docs/DATA_FORMAT.md](docs/DATA_FORMAT.md).
 

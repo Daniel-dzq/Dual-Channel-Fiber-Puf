@@ -97,7 +97,7 @@ def main() -> int:
         pairs, n_iterations=args.bootstrap_replicates, seed=BOOTSTRAP_SEED
     )
     decision = select_length(metrics, selection)
-    psd = ds.read_csv("Source_Data/Fig4/Fig4e_H_PSD_per_video.csv")
+    psd = ds.read_csv("Source_Data/Fig4/H_PSD_per_video.csv")
 
     metrics.to_csv(out / "length_metrics.csv", index=False)
     selection.to_csv(out / "bootstrap_selection.csv", index=False)

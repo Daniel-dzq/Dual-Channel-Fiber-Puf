@@ -1,0 +1,13 @@
+# Environment used for the ongoing raw-reproduction audit: Python 3.12.14,
+# macOS 15.6.1 arm64. This is distinct from the historical requirements.txt.
+# Complete end-to-end acceptance is still pending.
+numpy==2.4.4
+scipy==1.17.1
+pandas==2.2.3
+scikit-learn==1.8.0
+matplotlib==3.10.8
+opencv-python==4.13.0.92
+PyYAML==6.0.3
+pillow==12.3.0
+tqdm==4.67.3
+joblib==1.5.3

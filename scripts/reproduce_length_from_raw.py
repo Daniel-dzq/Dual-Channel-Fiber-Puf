@@ -11,6 +11,7 @@ parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--data-root',type=Path,required=True)
 parser.add_argument('--output',type=Path,required=True)
 parser.add_argument('--workers',type=int,default=1)
+parser.add_argument('--include-spatial',action='store_true',help='Also export raw-intensity PSD entropy and C01 Round A representative fields')
 args=parser.parse_args()
 DATA=args.data_root.resolve();OUT=args.output.resolve()
 if OUT.exists() and any(OUT.iterdir()):raise SystemExit('Output directory must be empty to prevent stale-result reuse.')
@@ -37,6 +38,15 @@ def read(r,dark=None):
  if dark is None:return acc/n
  im=np.median(np.stack(frames),axis=0).astype(np.float32).astype(np.float64)
  del frames
+ if args.include_spatial:
+  from puf_common.psd_features import extract_psd_features
+  mets=extract_psd_features(im.astype(np.float32),mask,n_radial_bins=24)
+  entropy=float(mets['psd_spectral_entropy'])
+  if not np.isfinite(entropy):raise ValueError('Undefined PSD entropy')
+  folder=OUT/'spatial_per_video';folder.mkdir(exist_ok=True)
+  tag=f"L{int(r['fiber_length_cm']):02}_{r['device']}_{r['acquisition_round'].replace(' ','_')}_{r['challenge']}"
+  (folder/(tag+'.json')).write_text(json.dumps({'L_cm':int(r['fiber_length_cm']),'device':r['device'],'acquisition_round':r['acquisition_round'],'challenge':r['challenge'],'H_PSD':entropy,'raw_release_path':r['release_path']}))
+  if r['challenge']=='C01' and r['acquisition_round']=='Round A':np.save(folder/(tag+'_raw_intensity.npy'),im)
  return (im/(cv2.GaussianBlur(im,(0,0),sigmaX=42,sigmaY=42,borderType=cv2.BORDER_REFLECT101)+1)-1)[mask]
 def device(item):
  L,f=item;dark=read(lookup[L,f,'','','dark_reference']);result={}
@@ -67,3 +77,9 @@ for L in [7,9,11,13,15]:
   with (OUT/name).open('w',newline='') as f:w=csv.DictWriter(f,fieldnames=list(data[0]),lineterminator='\n');w.writeheader();w.writerows(data)
  print('completed length',L,'elapsed',round(time.time()-t,1),metrics[-1],flush=True)
 (OUT/'raw_reproduction_provenance.json').write_text(json.dumps({'source_package':'Zenodo_release','source_files':[{'path':r['release_path'],'sha256':r['sha256']} for r in rows if r['optical_channel']=='green' or r['acquisition_role']=='dark_reference'],'mask_sha256':hashlib.sha256((DATA/'masks/fiber_length_valid_pixel_mask.npy').read_bytes()).hexdigest(),'numpy':np.__version__,'opencv':cv2.__version__,'protocol':'Native green plane; matched dark mean; discard first/last round(10*fps) decoded frames; central pixelwise median; local Gaussian sigma42 epsilon1 REFLECT101; eight-challenge common per device/round; reciprocal cross-round mismatch NCC means. Exact identifiers retained.'},indent=2))
+
+if args.include_spatial:
+ import pandas as pd
+ records=[json.loads(p.read_text()) for p in sorted((OUT/'spatial_per_video').glob('*.json'))]
+ assert len(records)==400
+ pd.DataFrame(records).to_csv(OUT/'H_PSD_per_video.csv',index=False)

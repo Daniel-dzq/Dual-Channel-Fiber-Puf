@@ -29,8 +29,8 @@ SEED_FIG5D, SEED_FIG5E = 42, 43
 EXPECTED = {"red_mean_repeatability": 0.94, "green_mean_repeatability": 0.77}
 
 
-def condition_bootstrap(values: pd.DataFrame, col: str, seed: int) -> pd.DataFrame:
-    rng = np.random.default_rng(seed)
+def condition_bootstrap(values: pd.DataFrame, col: str, seed: int, rng=None) -> pd.DataFrame:
+    rng = np.random.default_rng(seed) if rng is None else rng
     rows = []
     for wl, geom in CONDITIONS:
         v = values[(values.wavelength_nm == wl) & (values.injection_geometry == geom)].sort_values("device_id")[col].to_numpy(float)
@@ -78,7 +78,10 @@ def main() -> int:
 
     psd = ds.read_csv("analysis_ready_data/wavelength_pathway/figures/plotting_data_psd.csv")
     psd = psd[psd.kind == "fiber_condition"].rename(columns={"excitation_geometry": "injection_geometry", "fiber_id": "device_id"})
-    fc = condition_bootstrap(psd, "psd_centroid_cyc_per_px_median", SEED_FIG5E)
+    # The original PSD panel shares Generator(43) with the preceding ACF panel.
+    rng_e = np.random.default_rng(SEED_FIG5E)
+    condition_bootstrap(psd, "acf_fwhm_px_median", SEED_FIG5E, rng_e)
+    fc = condition_bootstrap(psd, "psd_centroid_cyc_per_px_median", SEED_FIG5E, rng_e)
 
     rep.to_csv(out / "fig5b_device_short_term_ncc.csv", index=False)
     fwhm.to_csv(out / "fig5d_condition_bootstrap_CI.csv", index=False)
