@@ -46,14 +46,9 @@ def run_lifecycle_analysis(
     cfg: LifecycleConfig,
     exclusions: set[tuple[str, str, str, str]] | None = None,
 ) -> dict[str, Any]:
-    """Run the eight-challenge threshold-development analysis (Supplementary Note 7.1).
-
-    ``exclusions`` is an optional set of ``(device_id, state_id, round_id, challenge_id)``
-    green recordings that are removed *before* any processing. The public dataset's
-    ``data_quality_exclusions.csv`` lists 16 invalid S1 copies whose removal defines the
-    corrected S7.1 operating point (T_G, n_req); the remaining challenges of an affected
-    (device, state, round) group form its common component.
-    """
+    """Run the complete eight-challenge acquisition specified in Supplementary Note 7.1."""
+    if exclusions:
+        raise ValueError("The publication protocol requires the complete dataset; exclusions block this analysis")
     run_dir = cfg.output_dir / "runs" / _timestamp()
     run_dir.mkdir(parents=True, exist_ok=True)
     figures = run_dir / "figures"
@@ -76,13 +71,14 @@ def run_lifecycle_analysis(
         )
 
     meta = load_experiment3_metadata(cfg.metadata_csv, cfg.videos_root)
-    if exclusions:
-        key = list(zip(meta["device_id"], meta["state_id"], meta["round_id"], meta["challenge_id"]))
-        drop = [k in exclusions for k in key]
-        meta = meta.loc[[not d for d in drop]].reset_index(drop=True)
-        pd.DataFrame(sorted(exclusions), columns=["device_id", "state_id", "round_id", "challenge_id"]).to_csv(
-            run_dir / "excluded_recordings.csv", index=False
-        )
+    expected = {
+        (f"F{i:02d}", f"S{s}", "green", rnd, f"C{k:02d}")
+        for i in range(1, 16) for s in range(3) for rnd in ("A", "B") for k in range(1, 9)
+    } | {(f"F{i:02d}", f"S{s}", "red", "", "") for i in range(1, 16) for s in range(3)}
+    observed = list(zip(meta.device_id, meta.state_id, meta.channel,
+                        meta.round_id.fillna(""), meta.challenge_id.fillna("")))
+    if len(observed) != 765 or len(set(observed)) != 765 or set(observed) != expected:
+        raise ValueError("Threshold-development recordings must cover all 765 prescribed acquisition identities")
     meta.to_csv(run_dir / "validated_metadata.csv", index=False)
 
     if cfg.dry_run:
@@ -430,23 +426,13 @@ def main(argv: list[str] | None = None) -> int:
 
     ap = argparse.ArgumentParser(description="Eight-challenge threshold-development analysis (Supplementary Note 7.1)")
     ap.add_argument("--config", type=Path, required=True)
-    ap.add_argument("--data-root", type=Path, default=None, help="Zenodo directory holding data_quality_exclusions.csv")
-    ap.add_argument("--exclusions", type=Path, default=None, help="Explicit path to data_quality_exclusions.csv")
-    ap.add_argument("--no-exclusions", action="store_true", help="Reproduce the pre-correction (frozen) run instead")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args(argv)
 
     cfg = LifecycleConfig.from_yaml(args.config)
     cfg.dry_run = cfg.dry_run or args.dry_run
-    excl: set[tuple[str, str, str, str]] = set()
-    if not args.no_exclusions:
-        manifest = args.exclusions or (args.data_root / "data_quality_exclusions.csv" if args.data_root else None)
-        if manifest is None or not Path(manifest).is_file():
-            ap.error("data_quality_exclusions.csv is required (pass --data-root or --exclusions, or --no-exclusions)")
-        excl = exclusions_from_manifest(Path(manifest))
-    summary = run_lifecycle_analysis(cfg, exclusions=excl or None)
+    summary = run_lifecycle_analysis(cfg)
     print("run_dir:", summary.get("run_dir"))
-    print("excluded recordings:", len(excl))
     return 0
 
 

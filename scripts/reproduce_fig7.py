@@ -6,8 +6,7 @@ Lightweight mode recomputes, from the frozen formal-run tables in
 ``Source_Data/Fig7``:
 
 * Fig. 7a - unit quality classes (Valid / Partial / Failed) from RG_C, Top-1 and EER
-  of each unit (128 challenges; the F02/M1/C099 non-independent Round A/B pair is
-  excluded from that unit's independent-pair summary, hence n = 127 there);
+  of each unit with 128 challenges;
 * Fig. 7b - green score hierarchy: Q05 of the 80 unit-level S_intra medians and Q95
   of the S_inter,c (80 unit medians), S_inter,d (8 state medians) and S_inter,s
   (560 source-target pair medians) distributions;
@@ -105,7 +104,7 @@ def main() -> int:
 
     checks = [
         check("device-state units", len(units), EXPECTED["n_units"], 0),
-        check("F02/M1 unit uses 127 independent pairs", int(units.loc[(units.device_id == "F02") & (units.state_id == "M1"), "n_positive"].item()), 127, 0),
+        check("all units contain 128 Round-A/Round-B pairs", bool((units.n_positive == 128).all()), True),
         check("Valid units", int(counts["Valid"]), EXPECTED["valid"], 0),
         check("Partial units", int(counts["Partial"]), EXPECTED["partial"], 0),
         check("Failed units", int(counts["Failed"]), EXPECTED["failed"], 0),

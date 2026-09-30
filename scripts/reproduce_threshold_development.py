@@ -1,88 +1,123 @@
 #!/usr/bin/env python3
-"""Supplementary Note 7.1 - threshold development on the eight-challenge remount dataset (T_G, n_req).
+"""Validate the complete threshold-development analysis against Supplementary Note 7.1.
 
-Lightweight mode recomputes the corrected operating point from the green pair-score table
-shipped in ``data/threshold_development/green_pair_scores_corrected.csv``:
-
-* T_G is the equal-error-rate threshold (501-point sweep) of the development devices
-  F01-F05 for same-device/same-state/same-challenge (Round A vs Round B) against
-  same-device/same-state/different-challenge scores;
-* n_req (k of 8) is the session rule selected on the development devices;
-* session acceptance for k = 8, 7, 6 and the joint (red identity AND green credential)
-  remount events (30 in total, 20 on the evaluation devices F06-F15).
-
-The 16 S1 recordings listed in the public ``data_quality_exclusions.csv``
-(``ACCIDENTAL_S1_COPY_OF_9CM``) are excluded from the independent S1 analysis; their raw
-files remain in the dataset. The Exp. 3 ``threshold_development/tau_G.json`` value in the
-analysis-ready package (0.1653) is a different pipeline's development EER threshold and is
-not the Supplementary Note 7.1 T_G.
-
-Raw mode (decode ``raw_threshold_development.zip``):
-``python -m experiment4_security.lifecycle.cli --config configs/lifecycle_threshold_development.yaml --data-root <zenodo>``.
+The dataset supplies processed_data/threshold_development/{green,red}_pair_scores.csv.
+This table-level validation does not replace raw-recording reproduction.
 """
-
 from __future__ import annotations
 
-from pathlib import Path
-
+import numpy as np
 import pandas as pd
-
 from experiment4_security.lifecycle.thresholds import select_session_rule, select_tau
 from puf_common.checks import check, open_dataset, report, reproduction_parser
-from puf_common.metrics import auc_roc, equal_error_rate_with_threshold
 
-REPO = Path(__file__).resolve().parents[1]
-DEVELOPMENT = [f"F{i:02d}" for i in range(1, 6)]
-EVALUATION = [f"F{i:02d}" for i in range(6, 16)]
-GENUINE, IMPOSTOR = "same_device_same_state_same_challenge", "same_device_same_state_diff_challenge"
-
-EXPECTED = {"T_G": 0.12899641700197656, "n_req": 7, "sessions": {8: "9/15", 7: "12/15", 6: "12/15"}, "joint": "26/30", "evaluation": "19/20", "n_excluded_S1": 16, "exp3_tau_G_not_S7_1": 0.1653272940550798}
+DEVELOPMENT = [f'F{i:02d}' for i in range(1, 6)]
+EVALUATION = [f'F{i:02d}' for i in range(6, 16)]
+GENUINE = 'same_device_same_state_same_challenge'
+INTER_CHALLENGE = 'same_device_same_state_diff_challenge'
 
 
-def development_operating_point(green: pd.DataFrame) -> dict:
+def development_operating_point(green):
     dev = green[green.device_id_a.isin(DEVELOPMENT) & green.device_id_b.isin(DEVELOPMENT)]
-    genuine = dev.loc[dev.group == GENUINE, "score"].to_numpy(float)
-    impostor = dev.loc[dev.group == IMPOSTOR, "score"].to_numpy(float)
-    tau_g = select_tau(genuine, impostor)
-    rule = select_session_rule(dev, tau_g)
-    eer, _ = equal_error_rate_with_threshold(genuine, impostor)
-    return {"T_G": tau_g, "n_req": int(rule["selected_k_of_8"]), "candidates": rule["candidates"], "development_auc": auc_roc(genuine, impostor), "development_eer": eer, "n_genuine": len(genuine), "n_impostor": len(impostor)}
+    genuine = dev.loc[dev.group == GENUINE, 'score'].to_numpy(float)
+    inter_challenge = dev.loc[dev.group == INTER_CHALLENGE, 'score'].to_numpy(float)
+    if len(genuine) != 120 or len(inter_challenge) != 840:
+        raise ValueError('Supplementary Note 7.1 requires 120 genuine and 840 inter-challenge development scores')
+    expected_genuine = {(device, state, f'C{k:02d}')
+        for device in DEVELOPMENT for state in ['S0', 'S1', 'S2'] for k in range(1, 9)}
+    g = dev[dev.group == GENUINE]
+    observed_genuine = list(zip(g.device_id_a, g.state_id_a, g.challenge_id_a))
+    if len(set(observed_genuine)) != 120 or set(observed_genuine) != expected_genuine:
+        raise ValueError('Missing or repeated genuine development identities')
+    if not ((g.device_id_a == g.device_id_b) & (g.state_id_a == g.state_id_b)
+            & (g.challenge_id_a == g.challenge_id_b)
+            & (g.round_id_a == 'A') & (g.round_id_b == 'B')).all():
+        raise ValueError('Genuine development scores must compare Round A with Round B')
+    expected_inter = {(device, state, rnd, f'C{i:02d}', f'C{j:02d}')
+        for device in DEVELOPMENT for state in ['S0', 'S1', 'S2']
+        for rnd in ['A', 'B'] for i in range(1, 9) for j in range(i+1, 9)}
+    c = dev[dev.group == INTER_CHALLENGE]
+    observed_inter = list(zip(c.device_id_a, c.state_id_a, c.round_id_a,
+                              c.challenge_id_a, c.challenge_id_b))
+    if len(set(observed_inter)) != 840 or set(observed_inter) != expected_inter:
+        raise ValueError('Missing or repeated inter-challenge development identities')
+    if not ((c.device_id_a == c.device_id_b) & (c.state_id_a == c.state_id_b)
+            & (c.round_id_a == c.round_id_b)).all():
+        raise ValueError('Inter-challenge development scores require the same device, state and round')
+    if not np.isfinite(np.concatenate([genuine, inter_challenge])).all():
+        raise ValueError('Non-finite threshold-development scores')
+    T_G = select_tau(genuine, inter_challenge)
+    rule = select_session_rule(dev, T_G)
+    return {'T_G': T_G, 'n_req': int(rule['selected_k_of_8']),
+            'candidates': rule['candidates'], 'n_genuine': len(genuine),
+            'n_inter_challenge': len(inter_challenge)}
 
 
-def main() -> int:
+def publication_score_tables(green, red):
+    """Map publication column names to the internal score-pair implementation."""
+    common = {'device_a': 'device_id_a', 'device_b': 'device_id_b',
+              'mechanical_state_a': 'state_id_a', 'mechanical_state_b': 'state_id_b'}
+    green = green.rename(columns={**common, 'green_credential_score': 'score',
+        'similarity_class': 'group', 'acquisition_round_a': 'round_id_a',
+        'acquisition_round_b': 'round_id_b', 'challenge_a': 'challenge_id_a',
+        'challenge_b': 'challenge_id_b'}).copy()
+    red = red.rename(columns={**common, 'red_identity_score': 'score',
+        'comparison_class': 'group'}).copy()
+    green['group'] = green['group'].replace({
+        'same_device_same_state_same_challenge_similarity': GENUINE,
+        'inter_challenge_similarity': INTER_CHALLENGE})
+    red['group'] = red['group'].replace({'same_device_cross_state': 'same_device_diff_state',
+                                       'different_device': 'diff_device'})
+    for table in [green, red]:
+        for col in ['state_id_a', 'state_id_b']:
+            table[col] = table[col].str.replace('M', 'S', regex=False)
+    for col in ['round_id_a', 'round_id_b']:
+        green[col] = green[col].str.replace('Round ', '', regex=False)
+    return green, red
+
+
+def main():
     args = reproduction_parser(__doc__.splitlines()[0]).parse_args()
-    ds, out = open_dataset(args, "threshold_development")
-
-    green = pd.read_csv(REPO / "data/threshold_development/green_pair_scores_corrected.csv")
-    events = pd.read_csv(REPO / "data/threshold_development/lifecycle_events_corrected.csv")
-    exclusions = ds.read_csv("data_quality_exclusions.csv")
-    frozen = ds.read_json("analysis_ready_data/fiber_id_9d/lifecycle/threshold_development.json")
-    exp3_tau = ds.read_json("analysis_ready_data/threshold_development/tau_G.json")["tau_G"]
-
+    ds, out = open_dataset(args, 'threshold_development')
+    green = ds.read_csv('processed_data/threshold_development/green_pair_scores.csv')
+    red = ds.read_csv('processed_data/threshold_development/red_pair_scores.csv')
+    green, red = publication_score_tables(green, red)
     op = development_operating_point(green)
-    sessions = {c["k_of_8"]: f"{round(c['session_pass_rate'] * c['n_events'])}/{c['n_events']}" for c in op["candidates"]}
-    joint = f"{int(events.authenticated_reenrollment_success.sum())}/{len(events)}"
-    eval_events = events[events.device_id.isin(EVALUATION)]
-    evaluation = f"{int(eval_events.authenticated_reenrollment_success.sum())}/{len(eval_events)}"
-    n_excluded = int((exclusions.anomaly == "ACCIDENTAL_S1_COPY_OF_9CM").sum())
+    dev = red[red.device_id_a.isin(DEVELOPMENT) & red.device_id_b.isin(DEVELOPMENT)]
+    genuine = dev.loc[dev.group == 'same_device_diff_state', 'score'].to_numpy(float)
+    different = dev.loc[dev.group == 'diff_device', 'score'].to_numpy(float)
+    if len(genuine) != 15 or len(different) != 90:
+        raise ValueError('Red threshold development requires 15 same-device and 90 different-device scores')
+    T_R = select_tau(genuine, different)
+    event_rows = []
+    for device in DEVELOPMENT + EVALUATION:
+        for state in ['S1', 'S2']:
+            r = red[(red.device_id_a == device) & (red.device_id_b == device)
+                    & (((red.state_id_a == 'S0') & (red.state_id_b == state))
+                       | ((red.state_id_b == 'S0') & (red.state_id_a == state)))]
+            g = green[(green.device_id_a == device) & (green.state_id_a == state)
+                      & (green.group == GENUINE)]
+            if len(r) != 1 or len(g) != 8:
+                raise ValueError(f'Incomplete authentication event: {device} {state}')
+            red_identity_score = float(r.score.iloc[0])
+            accepted_challenges = int((g.score >= op['T_G']).sum())
+            event_rows.append({'device_id': device, 'mechanical_state': state.replace('S', 'M'),
+                'red_identity_score': red_identity_score, 'accepted_challenges': accepted_challenges,
+                'joint_authentication_decision': red_identity_score >= T_R and accepted_challenges >= op['n_req']})
+    events = pd.DataFrame(event_rows)
+    evaluation = events[events.device_id.isin(EVALUATION)]
+    sessions = {r['k_of_8']: round(r['session_pass_rate'] * r['n_events']) for r in op['candidates']}
+    checks = [check('genuine development scores', op['n_genuine'], 120, 0),
+        check('inter-challenge development scores', op['n_inter_challenge'], 840, 0),
+        check('red identity threshold T_R', round(T_R, 3), -1.748, 0),
+        check('green credential threshold T_G', round(op['T_G'], 3), 0.134, 0),
+        check('required accepted challenges n_req', op['n_req'], 6, 0),
+        *[check(f'{k}-of-8 accepted development sessions', sessions[k], n, 0)
+          for k, n in [(8, 11), (7, 14), (6, 15)]],
+        check('current-state joint authentication events', int(events.joint_authentication_decision.sum()), 30, 0),
+        check('evaluation joint authentication events', int(evaluation.joint_authentication_decision.sum()), 20, 0)]
+    events.to_csv(out / 'authentication_events.csv', index=False)
+    return 0 if report(checks, out, 'Supplementary Note 7.1 publication validation') else 1
 
-    pd.Series({**op, "sessions": sessions, "joint_events": joint, "evaluation_events": evaluation, "n_excluded_S1_records": n_excluded}).to_json(out / "threshold_development_summary.json", indent=2)
-    events.to_csv(out / "lifecycle_events.csv", index=False)
-
-    checks = [
-        check("T_G (development EER threshold)", op["T_G"], EXPECTED["T_G"], 0),
-        check("T_G equals frozen tau_G_frozen in the public dataset", op["T_G"], float(frozen["tau_G_frozen"]), 0),
-        check("n_req (k of 8)", op["n_req"], EXPECTED["n_req"], 0),
-        check("n_req equals frozen n_req_frozen in the public dataset", op["n_req"], int(frozen["n_req_frozen"]), 0),
-        *[check(f"development session acceptance k={k}", sessions[k], v) for k, v in EXPECTED["sessions"].items()],
-        check("joint current-state remount events", joint, EXPECTED["joint"]),
-        check("evaluation-device joint events", evaluation, EXPECTED["evaluation"]),
-        check("joint rate equals frozen authenticated_reenrollment_success", round(float(events.authenticated_reenrollment_success.mean()), 12), round(float(frozen["lifecycle_metrics"]["authenticated_reenrollment_success"]), 12), 0),
-        check("excluded invalid S1 records in data_quality_exclusions.csv", n_excluded, EXPECTED["n_excluded_S1"], 0),
-        check("Exp. 3 tau_G.json is a different quantity (not T_G)", float(exp3_tau), EXPECTED["exp3_tau_G_not_S7_1"], 0),
-    ]
-    return 0 if report(checks, out, "Threshold-development (Supplementary Note 7.1) authority checks") else 1
-
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     raise SystemExit(main())

@@ -69,7 +69,7 @@ python scripts/prepare_raw_workspace.py --data-root $PUF_DATA_ROOT --experiment 
 | Fig. 4 fiber-length optimization | `raw_fiber_length.zip` | `python -m experiment00.cli --config configs/fiber_length_optimization.yaml validate` then `analyze` |
 | Fig. 5a,b / Fig. 6 fixed state | `raw_fixed_state.zip` | `python -m experiment2.cli validate --config configs/fixed_state_dual_channel.yaml`, then `run`, then `analyze` |
 | Fig. 5c-e wavelength / pathway | `raw_wavelength_pathway.zip` | `python -m experiment02b.cli --config configs/wavelength_pathway_control.yaml --stage all` |
-| Supplementary Note 7.1 | `raw_threshold_development.zip` | `python -m experiment3.cli run --config configs/threshold_development.yaml` (descriptive tables); `python -m experiment4_security.lifecycle.cli --config configs/lifecycle_threshold_development.yaml --data-root $PUF_DATA_ROOT` ($T_G$, $n_{\mathrm{req}}$, remount events; applies the exclusion manifest) |
+| Supplementary Note 7.1 | `raw_threshold_development.zip` | `python -m experiment3.cli run --config configs/threshold_development.yaml` (descriptive tables); `python -m experiment4_security.lifecycle.cli --config configs/lifecycle_threshold_development.yaml` ($T_G$, $n_{\mathrm{req}}$, current-state joint authentication) |
 | Fig. 7 / Fig. 8a-b / S2 / S3 formal experiment | `raw_formal_F01..F10.zip` | `python -m experiment4_security.identity_credential.cli --config configs/formal_reconfiguration.yaml validate`, then `formal` |
 | Fig. 8c-d / S4 partial disclosure | formal run above | set `base_run` in `configs/partial_disclosure.yaml` to the formal run directory, then `python -m experiment4_security.cli partial-leakage --config configs/partial_disclosure.yaml` |
 
@@ -111,4 +111,4 @@ the last decoded frame count (the pipelines trim fixed time margins and aggregat
 | Fig. 6 | red AUC 0.953651, EER 0.064286, $RG_R$ -0.204386030272718; Top-1 15/15, 119/120, joint 14/15; HD means 0.202 / 0.512 / 0.489 |
 | Fig. 7 | 77 Valid / 3 Partial / 0 Failed; $RG_C$ median 0.363; revocation margin 0.386; red medians -0.31 / -0.39 / -6.17; global red EER 0.096; held-out AUC 0.9834, EER 0.0996 |
 | Fig. 8 | $\Delta S_A$ 0.94 / 0.80 / 0.79 / 0.64; $N_L$ = 16/32/64/96; Top-1 lift <= 1 |
-| Supplementary Note 7.1 | $T_G$ = 0.12899641700197656, $n_{\mathrm{req}}$ = 7; 9/15, 12/15, 12/15; 26/30; 19/20 |
+| Supplementary Note 7.1 | $T_G$ = 0.134, $n_{\mathrm{req}}$ = 6; 11/15, 14/15, 15/15; 30/30; 20/20 |

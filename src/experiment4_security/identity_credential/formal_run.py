@@ -150,74 +150,54 @@ def _ensure_green_vectors(
     ml_cfg: Any,
     shared_vector_dirs: list[Path] | None = None,
 ) -> None:
-    """Process missing green clips into vector cache (parallel).
-
-    Reuses identical sample_id vectors from shared/prior caches via hardlink/symlink
-    when present (same frozen mask + preprocessing protocol).
-    """
+    """Reuse responses only when their input and output content hashes match."""
+    import shutil
+    from experiment4_security.identity_credential.vector_provenance import (
+        cache_matches, response_provenance, write_provenance,
+    )
     vdir = vector_dir(run_dir)
     reuse_dirs = [Path(p) for p in (shared_vector_dirs or []) if Path(p).is_dir()]
     green = found[(found["channel"] == "green") & (found["parse_ok"])].copy()
     jobs = []
-    n_reused = 0
     for _, r in green.iterrows():
         sid = green_sample_id(r["device_id"], r["state_id"], r["round_id"], r["challenge_id"])
+        path = Path(r["abspath"])
+        expected = response_provenance(path, mask, ml_cfg.preprocessing)
         out = vdir / f"{sid}.npy"
-        if out.exists():
+        if cache_matches(out, expected):
             continue
-        reused = False
+        # Detach any link before writing: prior-run arrays are immutable.
+        if out.exists() or out.is_symlink():
+            out.unlink()
         for src_dir in reuse_dirs:
             src = src_dir / f"{sid}.npy"
-            if not src.is_file():
-                continue
-            try:
-                out.hardlink_to(src)
-            except OSError:
-                try:
-                    out.symlink_to(src.resolve())
-                except OSError:
-                    continue
-            n_reused += 1
-            reused = True
-            break
-        if not reused:
-            jobs.append((sid, Path(r["abspath"])))
+            if cache_matches(src, expected):
+                shutil.copyfile(src, out)
+                write_provenance(out, expected)
+                break
+        else:
+            jobs.append((sid, path, expected))
 
-    logger.info(
-        "[formal] green clips to process: %d (workers=%d; reused_from_cache=%d)",
-        len(jobs),
-        n_workers,
-        n_reused,
-    )
-    if not jobs:
-        return
-
-    def _one(item: tuple[str, Path]) -> str:
-        sid, path = item
-        vp.process_and_cache_clip(
-            path,
-            sample_id=sid,
-            valid_mask=mask,
-            cfg=ml_cfg,
-            vector_cache_dir=vdir,
+    def _one(item):
+        sid, path, expected = item
+        qc = vp.process_and_cache_clip(
+            path, sample_id=sid, valid_mask=mask, cfg=ml_cfg, vector_cache_dir=vdir,
         )
-        # Persist into shared cache for future resumes / devices-partial reruns.
-        for src_dir in reuse_dirs[:1]:
-            shared_out = src_dir / f"{sid}.npy"
-            if shared_out.exists():
-                break
-            try:
-                shared_out.hardlink_to(vdir / f"{sid}.npy")
-            except OSError:
-                break
+        if qc["decode_status"] != "OK" or qc["qc_status"] == "ERROR":
+            raise GateError(f"Green response processing failed for {sid}: {qc['qc_reasons']}")
+        if response_provenance(path, mask, ml_cfg.preprocessing) != expected:
+            raise GateError(f"Recording or protocol changed during processing: {sid}")
+        out = vdir / f"{sid}.npy"
+        write_provenance(out, expected)
+        if not cache_matches(out, expected):
+            raise GateError(f"Response cache verification failed: {sid}")
         return sid
 
+    logger.info("[formal] processing %d content-verified green responses", len(jobs))
     with ThreadPoolExecutor(max_workers=max(1, n_workers)) as ex:
-        futs = [ex.submit(_one, j) for j in jobs]
-        done = 0
-        for fut in as_completed(futs):
-            fut.result()
-            done += 1
+        futs = [ex.submit(_one, item) for item in jobs]
+        for done, future in enumerate(as_completed(futs), 1):
+            future.result()
             if done % 64 == 0 or done == len(jobs):
                 logger.info("[formal] green cache progress %d/%d", done, len(jobs))
 
@@ -292,7 +272,6 @@ def run_formal_pipeline(
     from experiment4_security.identity_credential.cache_store import ensure_shared_cache_layout
     from experiment4_security.identity_credential.run_registry import (
         create_run,
-        reopen_run,
         sha256_text,
     )
 
@@ -317,34 +296,13 @@ def run_formal_pipeline(
     ):
         raise GateError(f"formal re-validation inventory failed: {audit.get('data_status')}")
 
-    ab_checkpoint = _find_ab_checkpoint(cfg.output_root)
-    green_resume = None if ab_checkpoint is not None else _find_green_vector_resume_checkpoint(cfg.output_root)
-    if ab_checkpoint is not None:
-        logger.info("[formal] resuming in-place from A/B checkpoint %s", ab_checkpoint.name)
-        ctx = reopen_run(
-            cfg.output_root,
-            ab_checkpoint.name,
-            project_root=cfg.project_root,
-            parent_run_id=validated_by_run_id,
-            formal_scientific_run=True,
-        )
-    elif green_resume is not None:
-        logger.info("[formal] resuming green-vector phase in-place from %s", green_resume.name)
-        ctx = reopen_run(
-            cfg.output_root,
-            green_resume.name,
-            project_root=cfg.project_root,
-            parent_run_id=validated_by_run_id,
-            formal_scientific_run=True,
-        )
-    else:
-        ctx = create_run(
-            cfg.output_root,
-            "formal",
-            project_root=cfg.project_root,
-            parent_run_id=validated_by_run_id,
-            formal_scientific_run=True,
-        )
+    # Historical summary checkpoints lack a complete input-content contract.
+    # A fresh run prevents silent reuse after a recording or protocol changes.
+    ab_checkpoint = None
+    ctx = create_run(
+        cfg.output_root, "formal", project_root=cfg.project_root,
+        parent_run_id=validated_by_run_id, formal_scientific_run=True,
+    )
     run_dir = ctx.run_dir
     run_id = ctx.run_id
     assert_not_writing_protected(run_dir / "run_manifest.json", cfg.project_root)

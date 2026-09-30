@@ -18,12 +18,12 @@ logger = logging.getLogger(__name__)
 def database_authentication_conclusion(rg_c: float, top1: float, eer: float) -> str:
     """Unit quality class of a device-state unit (Fig. 7a): Valid / Partial / Failed.
 
-    Valid requires RG_C > 0.05, Top-1 >= 0.90 and EER <= 0.10 over the 128 challenges.
+    Valid requires RG_C >= 0.05, Top-1 >= 0.90 and EER <= 0.10 over the 128 challenges.
     This rule is independent of the threshold-development operating point (T_G, n_req).
     """
-    if not np.isfinite(rg_c) or not np.isfinite(top1):
+    if not np.isfinite(rg_c) or not np.isfinite(top1) or not np.isfinite(eer):
         return "DATABASE_AUTHENTICATION_FAILED"
-    if rg_c > 0.05 and top1 >= 0.90 and (not np.isfinite(eer) or eer <= 0.10):
+    if rg_c >= 0.05 and top1 >= 0.90 and eer <= 0.10:
         return "DATABASE_AUTHENTICATION_VALID"
     if rg_c > 0.0 and top1 >= 0.50:
         return "DATABASE_AUTHENTICATION_PARTIAL"

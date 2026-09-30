@@ -9,6 +9,10 @@ generation, response preprocessing, zero-mean normalized cross-correlation and P
 calculations, identity-feature extraction, statistical analysis, figure reproduction and
 enrollment-database disclosure attacks used in the paper.
 
+## Validation status
+
+This branch contains input-provenance and publication-validation safeguards. It is not a verified full-publication reproduction release. Use the manifest-format data verification and threshold-development commands below for the corresponding candidate dataset. Full raw-to-figure reproduction and statistical-method validation remain incomplete.
+
 ## Paper
 
 *Dual-channel fiber physical unclonable functions with persistent identity and reconfigurable
@@ -26,10 +30,7 @@ Dataset: Dai et al., data for "Dual-channel fiber physical unclonable functions 
 identity and reconfigurable credentials", Zenodo. DOI:
 [10.5281/zenodo.22267156](https://doi.org/10.5281/zenodo.22267156).
 
-The Zenodo record contains the Source Data of every numerical panel, analysis-ready tables,
-the two challenge libraries, calibration and valid-pixel masks, a machine-readable data-quality
-exclusion manifest, and the complete H.264-compressed raw camera recordings (22,147 labeled
-MP4 files, about 19.12 GiB). This repository contains no recordings; the code reads the dataset
+The publication recording inventory comprises 22,147 labeled H.264 MP4 files, about 19.12 GiB. The candidate manifest-format dataset includes recordings, experimental challenge patterns, masks and threshold-development score tables. Complete panel source data remain subject to numerical validation. This repository contains no recordings; the code reads the dataset
 from a directory you choose (`--data-root` or `$PUF_DATA_ROOT`). See
 [docs/DATA_FORMAT.md](docs/DATA_FORMAT.md).
 
@@ -49,7 +50,7 @@ src/
                          threshold development (lifecycle), response-reconstruction attacks
 scripts/       reproduce_fig*.py, reproduce_supp_fig_s*.py, reproduce_threshold_development.py,
                verify_public_data.py, prepare_raw_workspace.py
-data/          canonical eight-challenge patterns (mp002) and the corrected Note 7.1 tables
+data/          canonical eight-challenge patterns (mp002) and threshold-development data documentation
 docs/          REPRODUCIBILITY, DATA_FORMAT, FIGURE_MAP, PREPROCESSING, ATTACK_MODELS
 examples/      minimal_workflow.py
 ```
@@ -71,17 +72,17 @@ pip install -e .
 ## Quick start
 
 ```bash
-export PUF_DATA_ROOT=/path/to/zenodo_dataset      # the Zenodo download; archives may stay zipped
-python scripts/verify_public_data.py               # dataset integrity and authority sanity checks
-python scripts/reproduce_fig4.py                   # fiber-length optimization, prints PASS/FAIL checks
+export PUF_DATA_ROOT=/path/to/Zenodo_release
+python scripts/verify_public_data.py --data-root "$PUF_DATA_ROOT"
+python scripts/reproduce_threshold_development.py --data-root "$PUF_DATA_ROOT"
 ```
 
-Results are written to `./outputs/<figure>/` (`--output-root` to change). Every reproduction
+Numerical validation results are written to `./outputs/<figure>/` (`--output-root` to change). Every reproduction
 script accepts `--data-root`, `--output-root` and `--no-figures`.
 
 ## Reproducing figures
 
-Lightweight mode (recommended) recomputes the reported quantities from the Source Data and
+The figure commands below require their validated source-data inputs, which are not yet supplied in the manifest-format candidate. Lightweight mode recomputes the reported quantities from the Source Data and
 analysis-ready tables without decoding any video. Raw mode re-runs the preprocessing from the
 recordings; it needs the `raw_*.zip` archives and considerably more time and storage
 ([docs/REPRODUCIBILITY.md](docs/REPRODUCIBILITY.md)).
@@ -97,7 +98,7 @@ recordings; it needs the `raw_*.zip` archives and considerably more time and sto
 | Fig. S2 | `python scripts/reproduce_supp_fig_s2.py` | $RG_C$ 0.109-0.551; $RG_{\mathrm{device}}$ 0.60-0.69 |
 | Fig. S3 | `python scripts/reproduce_supp_fig_s3.py` | five source-to-target matrices equal the frozen tables |
 | Fig. S4 | `python scripts/reproduce_supp_fig_s4.py` | ridge $N_L = 96$ matrix; $d_{\mathrm{PCA}} = 15/31/63/64$ |
-| Supplementary Note 7.1 | `python scripts/reproduce_threshold_development.py` | $T_G = 0.12899641700197656$, $n_{\mathrm{req}} = 7$; 26/30, 19/20 |
+| Supplementary Note 7.1 | `python scripts/reproduce_threshold_development.py` | $T_G = 0.134$, $n_{\mathrm{req}} = 6$; 30/30, 20/20 |
 
 The full mapping (configs, required Zenodo files, raw-mode pipelines) is in
 [docs/FIGURE_MAP.md](docs/FIGURE_MAP.md).
@@ -116,15 +117,15 @@ Q_{0.05}(S_{\mathrm{intra}})-Q_{0.95}(S_{\mathrm{inter},d})
 $$
 
   on cross-round scores, with a hierarchical bootstrap (device, then challenge within device;
-  $B = 5000$, seed 20260721). The PSD entropy $H_{\mathrm{PSD}}$ (Fig. 4e) is complementary
+  $B = 5000$, seed 20260721). The PSD entropy $H_{\mathrm{PSD}}$ (Supplementary Note 4) is complementary
   spatial-frequency characterization and is not part of the selection criterion.
 * Similarity is the signed zero-mean normalized cross-correlation on the masked, envelope-
   normalized, common-component-removed response (range $[-1, 1]$; no absolute value, no image
   registration).
 * The threshold-development dataset (Supplementary Note 7.1; 15 devices, states S0-S2, eight
   challenges) and the formal 80-unit experiment (Fig. 7-8; 10 devices, states M0-M7, 128
-  challenges) use different common-component protocols. The operating point $T_G = 0.129$ and
-  $n_{\mathrm{req}} = 7$ belongs to Note 7.1 only; the Fig. 7 unit classes (Valid / Partial /
+  challenges) use different common-component protocols. The operating point $T_G = 0.134$ and
+  $n_{\mathrm{req}} = 6$ belongs to Note 7.1 only; the Fig. 7 unit classes (Valid / Partial /
   Failed) are defined by $RG_C$, Top-1 and EER of each unit and do not use $T_G$ or
   $n_{\mathrm{req}}$. In the formal experiment the common component is estimated from the
   Round-A enrollment responses only and applied unchanged to Round B and to cross-state
@@ -133,13 +134,19 @@ $$
   digital enrollment-database replay benchmark, not a physical clone ([docs/ATTACK_MODELS.md](docs/ATTACK_MODELS.md)).
 * Preprocessing differs between datasets and is summarized in [docs/PREPROCESSING.md](docs/PREPROCESSING.md).
 
-## Data exclusions
+## Publication validation
 
-The dataset ships `data_quality_exclusions.csv`. The analysis scripts apply the documented
-treatments: 16 threshold-development S1 recordings are excluded from the independent S1
-analyses, the F02/M1/C099 Round A/B pair is excluded from that unit's independent-pair summary
-(127 pairs), and 64 intentional S0 baseline reuses are retained. All raw files remain in the
-dataset.
+Supplementary Note 7.1 requires the complete 765-recording acquisition, including 120
+genuine and 840 inter-challenge development scores. Development-session acceptance
+must reproduce 11/15, 14/15 and 15/15 for requirements of eight, seven and six challenges.
+The formal experiment requires 128 independent Round-A/Round-B pairs per device–state unit.
+
+Raw-response caches are reusable only when the recording SHA-256, valid-pixel mask,
+preprocessing parameters, software versions and cached response hash match. Formal
+analysis starts a separate run so that summary checkpoints cannot outlive their inputs.
+Table-level figure checks validate derived tables; they do not establish reproduction
+from recordings. A complete release additionally requires raw-to-response provenance
+and successful isolated reproduction against the manuscript and Supplementary Information.
 
 ## Citation
 

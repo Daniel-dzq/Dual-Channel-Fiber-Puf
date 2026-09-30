@@ -1,10 +1,5 @@
-# Lifecycle threshold-development analysis (Supplementary Note 7.1 operating point:
-# T_G, n_req, tau_R, 30 remount events). Paths are relative to the repository root.
-# Run `python scripts/prepare_raw_workspace.py --experiment threshold_development` first, then
-# `python -m experiment4_security.lifecycle.cli --config configs/lifecycle_threshold_development.yaml --data-root <zenodo>`
-# (applies the 16 invalid-S1 exclusions listed in data_quality_exclusions.csv, which define the
-# corrected S7.1 operating point; `--no-exclusions` reproduces the pre-correction run).
-
+# Complete threshold-development acquisition specified in Supplementary Note 7.1.
+# python -m experiment4_security.lifecycle.cli --config configs/lifecycle_threshold_development.yaml
 threshold_development_root: data/raw/threshold_development
 metadata_csv: data/raw/threshold_development/experiment3_metadata.csv
 videos_root: data/raw/threshold_development

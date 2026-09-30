@@ -28,8 +28,8 @@ import numpy as np
 DETAIL_SIGMA = 42.0
 DETAIL_EPSILON = 1.0
 REPRESENTATION_VERSION = "fullres_detail_cm_enrollment_frozen_v1"
-FRAME_AGGREGATION_PROTOCOL = "discard_10s_head_tail__3_block_median__rep_median"
-FULL_VIDEO_POLICY = "retain_middle_after_head_tail_discard"
+FRAME_AGGREGATION_PROTOCOL = "pixelwise_median_all_decodable_frames"
+FULL_VIDEO_POLICY = "all_decodable_frames_no_trimming"
 CHANNEL_GREEN = "green_bgr1"
 CHANNEL_RED = "red_bgr2"
 

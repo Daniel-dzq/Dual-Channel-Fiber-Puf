@@ -26,7 +26,6 @@ Nothing is written into that directory.
 | `Source_Data.zip` (`Source_Data/FigN/...`) | Frozen per-panel tables underlying the published figures (pair scores, ROC, retrieval tables, state matrices, bootstrap draws) | all `scripts/reproduce_*.py` |
 | `analysis_ready_data.zip` | Pipeline-level tables: `metadata/experiment2_metadata.csv`, `metadata/experiment3_metadata.csv`, `macro_pixel/`, `fiber_length/`, `fixed_state/{metrics,figure_data}`, `wavelength_pathway/`, `threshold_development/`, `fiber_id_9d/`, `formal/track_*`, `attacks/` | reproduction scripts; `scripts/prepare_raw_workspace.py` (metadata) |
 | `challenges_calibration_masks.zip` | `challenges/` (128 canvases as PNG, `challenges_exact.npz`, `challenge_manifest.csv`, pairwise Hamming / input-NCC tables, `mp002_meta/`), `calibration/dark_reference_2048x1536.npz`, `masks/` (four valid-pixel masks, `MASKS.json`) | `scripts/verify_public_data.py`; raw-mode configs |
-| `data_quality_exclusions.csv` | 81 records: 64 intentional S0 reuses (retained), 16 invalid S1 copies (`EXCLUDE_FROM_INDEPENDENT_S1_ANALYSES`), 1 non-independent formal Round A/B pair (F02/M1/C099) | `experiment4_security.lifecycle.cli`, `scripts/reproduce_threshold_development.py`, `verify_public_data.py` |
 | `raw_file_manifest.csv`, `file_manifest.csv`, `final_release_checksums.sha256` | Inventory and SHA-256 of every file | `verify_public_data.py --checksums` |
 | `raw_macro_pixel.zip` | `mp001/..mp064/` screening videos and `dark/dark.mp4` | `e01` (extract into `data/raw/macro_pixel/videos/`) |
 | `raw_fiber_length.zip` | `videos/<L>cm_F0x_G_<A|B>_C0x.mp4` and per-(length, fiber) darks under `dark/` | `experiment00` |
@@ -59,7 +58,7 @@ Some analysis-ready files keep the numbering of the pipeline that produced them:
 (`figure3e_standard_puf_metrics.csv` = Fig. 6d binary PUF metrics), and
 `fiber_id_9d/fig6`, `fig6e`, `fig7`, `lifecycle` follow the paper numbering.
 `threshold_development/tau_G.json` (0.1653) is the descriptive development EER threshold of the
-`threshold_development` pipeline and is not the Supplementary Note 7.1 operating point $T_G$ = 0.129, which is
+`threshold_development` pipeline and is not the Supplementary Note 7.1 operating point $T_G$ = 0.134, which is
 stored in `fiber_id_9d/lifecycle/threshold_development.json` (`tau_G_frozen`, `n_req_frozen`).
 `fiber_length/` holds the frozen pre-final fiber-length run; the Fig. 4 authority is
 `Source_Data/Fig4/`.
@@ -67,6 +66,5 @@ stored in `fiber_id_9d/lifecycle/threshold_development.json` (`tau_G_frozen`, `n
 ## Tables shipped in this repository
 
 `data/challenge_patterns/mp002/mp002_C01..C08.png` are the canonical eight-challenge canvases
-(1024 x 768, active 512 x 512 at offset (256, 128)). `data/threshold_development/` holds the
-corrected green pair-score and remount-event tables of Supplementary Note 7.1 (see the README
-in that folder).
+(1024 x 768, active 512 x 512 at offset (256, 128)). The dataset supplies complete threshold-development score tables in
+`processed_data/threshold_development/`.
