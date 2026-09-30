@@ -90,7 +90,7 @@ recordings; it needs the `raw_*.zip` archives and considerably more time and sto
 | Paper item | Lightweight command | Principal check |
 |---|---|---|
 | Fig. 3 | `python scripts/reproduce_fig3.py` | $m = 2$ selected; $G(2) = 0.5595$, $G(4) = 0.5669$ |
-| Fig. 4 | `python scripts/reproduce_fig4.py` | $L = 9$ cm; $G_{\mathrm{min}} = 0.3897924079274487$; bootstrap 4991/5000 |
+| Fig. 4 | `python scripts/reproduce_fig4.py` | $L = 9$ cm; $G_{\mathrm{min}} = 0.3897924079274487$; bootstrap 4956/4967 complete resamples from 5000 draws |
 | Fig. 5 | `python scripts/reproduce_fig5.py` | short-term repeatability red 0.94 / green 0.77; Fig. 5d/e bootstrap CIs |
 | Fig. 6 | `python scripts/reproduce_fig6.py` | red AUC 0.953651, EER 0.064286; Top-1 15/15, 119/120, joint 14/15 |
 | Fig. 7 | `python scripts/reproduce_fig7.py` | 80 units: 77 Valid / 3 Partial / 0 Failed; revocation margin 0.386 |
@@ -102,6 +102,9 @@ recordings; it needs the `raw_*.zip` archives and considerably more time and sto
 
 The full mapping (configs, required Zenodo files, raw-mode pipelines) is in
 [docs/FIGURE_MAP.md](docs/FIGURE_MAP.md).
+
+The canonical source-data-only figure renderers and raw fiber-length reconstruction
+commands are documented in [docs/FIGURE_SOURCE_REPRODUCTION.md](docs/FIGURE_SOURCE_REPRODUCTION.md).
 
 ## Analysis notes
 
@@ -119,6 +122,13 @@ $$
   on cross-round scores, with a hierarchical bootstrap (device, then challenge within device;
   $B = 5000$, seed 20260721). The PSD entropy $H_{\mathrm{PSD}}$ (Supplementary Note 4) is complementary
   spatial-frequency characterization and is not part of the selection criterion.
+  Repeated device occurrences and repeated challenge draws retain their multiplicities.
+  Inter-device and inter-challenge pairs retain their original distinct-identity definitions.
+  A draw with an empty comparison class has an undefined margin. Of 5000 draws,
+  4967 have defined margins for every length; selection frequencies use that denominator.
+  The 9 cm, 7 cm and 11 cm selection counts are 4956, 10 and 1, respectively.
+  `scripts/reproduce_length_bootstrap.py --pair-scores PATH --output DIR` reproduces
+  every draw from the publication table `Fig4c_cross_round_pair_scores.csv`.
 * Similarity is the signed zero-mean normalized cross-correlation on the masked, envelope-
   normalized, common-component-removed response (range $[-1, 1]$; no absolute value, no image
   registration).

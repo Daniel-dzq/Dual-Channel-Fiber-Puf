@@ -305,7 +305,11 @@ def run_device_source_state(
     del a_vectors
 
     Q_by_target = {t: to_templates(b_vectors_all_states[t], common_full) for t in states_for_transfer}
-    genuine_scores = compute_genuine_scores(T_full, Q_by_target[source_state])
+    genuine_queries = Q_by_target.get(source_state)
+    if genuine_queries is None:
+        genuine_queries = to_templates(b_vectors_all_states[source_state], common_full)
+    genuine_scores = compute_genuine_scores(T_full, genuine_queries)
+    del genuine_queries
 
     summary_rows: list[dict[str, Any]] = []
     hidden_rows: list[dict[str, Any]] = []

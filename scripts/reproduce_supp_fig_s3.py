@@ -16,7 +16,7 @@ from experiment4_security.ml_attack.summaries import ATTACK_LABELS, state_matrix
 from puf_common.checks import check, open_dataset, report, reproduction_parser
 
 PANELS = {"exact_template_replay": "FigS3_exact_replay_state_matrix.csv", "ridge_clone": "FigS3_ridge_state_matrix.csv", "kernel_ridge_clone": "FigS3_kernel_ridge_state_matrix.csv", "random_fourier_ridge_clone": "FigS3_rff_ridge_state_matrix.csv", "small_mlp_clone": "FigS3_small_mlp_state_matrix.csv"}
-EXPECTED_DIAGONAL_RANGE = {"exact_template_replay": (0.92, 0.94), "ridge_clone": (0.75, 0.81), "kernel_ridge_clone": (0.75, 0.80), "random_fourier_ridge_clone": (0.61, 0.65), "small_mlp_clone": (0.24, 0.27)}
+EXPECTED_DIAGONAL_RANGE = {"exact_template_replay": (0.92, 0.94), "ridge_clone": (0.76, 0.81), "kernel_ridge_clone": (0.75, 0.80), "random_fourier_ridge_clone": (0.61, 0.65), "small_mlp_clone": (0.24, 0.27)}
 EXPECTED_REPLAY_OFFDIAG = (-0.02, -0.01)
 
 

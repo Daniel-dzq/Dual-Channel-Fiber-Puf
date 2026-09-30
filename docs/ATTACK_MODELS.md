@@ -55,9 +55,14 @@ state. It is not a physical clone of the fiber.
   each split discloses 1, 2, 4 or 6 challenges per bank (bank-balanced, nested). Five
   partitions per level with seeds 20260801-20260805; 80 units x 5 partitions = 400 evaluations
   per (method, $N_L$).
-* Training boundary: the enrollment common component, the PCA basis
-  ($d_{\mathrm{PCA}}$ = max(1, min(64, $N_L$ - 1))) and every regression model are fitted on the disclosed
-  Round-A templates only. Hidden challenges never enter the fit, the PCA or any model selection.
+* Disclosure is of stored enrollment templates. The verifier first constructs these
+  templates using the common component of all 128 Round-A enrollment responses.
+  That enrollment preprocessing is fixed before the disclosure partition is drawn.
+  Only the disclosed templates enter per-pixel standardization, PCA
+  ($d_{\mathrm{PCA}}$ = max(1, min(64, $N_L$ - 1))) and regression training.
+  The undisclosed template vectors and all Round-B responses are excluded from those fits.
+  This benchmark therefore concerns disclosure of stored, preprocessed templates;
+  it does not implement preprocessing fitted solely from a subset of raw responses.
 * Evaluation: predicted responses for the $N_H$ = 128 - $N_L$ hidden challenges are scored against
   the genuine Round-B responses of those challenges (hidden-response $S_A$) and through the
   chance-normalized closed-set Top-1 lift (1 = chance level; values above 1 would indicate
@@ -65,9 +70,14 @@ state. It is not a physical clone of the fiber.
   nearest disclosed challenge (normalized Hamming distance between patterns).
 * Cross-state transfer (Track D-PL): the frozen $N_L$-model of the source state is scored against
   hidden-challenge Round-B responses of other states without retraining (Fig. S4a, ridge, $N_L$ = 96).
-* Model audit (Fig. S4b-d): retained PCA dimension, residual NCC after removing the common
-  predicted-response component, and the fraction of predictions dominated by that common
-  component (`common_dominance_flag = HIGH_NCC_DOMINATED_BY_COMMON_RESPONSE`).
+* Model audit (Fig. S4b-d): retained PCA dimension; the median across 400
+  device-state-partition evaluations of the mean hidden-challenge residual NCC;
+  and the fraction of those 400 evaluations classified as common dominated.
+  The common component here is the pixelwise mean of the disclosed templates
+  used for PCA. It is subtracted from both predictions and measured queries.
+  An evaluation is flagged when its mean prediction-to-PCA-mean NCC exceeds
+  0.95 and its mean residual NCC is below 0.2. These are evaluation-level
+  averages, not separate binary classifications of individual predicted responses.
 
 ## Scope
 

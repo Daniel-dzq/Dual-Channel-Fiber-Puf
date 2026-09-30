@@ -1,137 +1,115 @@
-"""Hierarchical device-then-challenge bootstrap for length metrics."""
+"""Hierarchical resampling of eligible device/challenge score pairs.
 
+Each sampled device occurrence receives its own with-replacement challenge draw.
+Integer pair multiplicities retain the original same/different-identity definitions.
+Undefined replicates are retained as NaN, never treated as successful selections.
+"""
 from __future__ import annotations
-
-from collections import Counter
-
+from itertools import combinations
 import numpy as np
 import pandas as pd
-from tqdm.auto import tqdm
+
+SCORE_TYPES = ('S_intra', 'S_inter_challenge', 'S_inter_device')
 
 
 def _maximin_from_pairs(sub: pd.DataFrame) -> float:
-    g = sub.loc[sub.score_type == "S_intra", "score"].to_numpy(float)
-    ich = sub.loc[sub.score_type == "S_inter_challenge", "score"].to_numpy(float)
-    idev = sub.loc[sub.score_type == "S_inter_device", "score"].to_numpy(float)
-    if g.size == 0:
-        return float("nan")
-    gaps = []
-    if ich.size:
-        gaps.append(float(np.quantile(g, 0.05) - np.quantile(ich, 0.95)))
-    if idev.size:
-        gaps.append(float(np.quantile(g, 0.05) - np.quantile(idev, 0.95)))
-    return float(np.nanmin(gaps)) if gaps else float("nan")
+    scores = [sub.loc[sub.score_type == kind, 'score'].to_numpy(float) for kind in SCORE_TYPES]
+    if any(len(x) == 0 or not np.isfinite(x).all() for x in scores):
+        return float('nan')
+    g, c, d = scores
+    return float(np.quantile(g, .05) - max(np.quantile(c, .95), np.quantile(d, .95)))
 
 
-def hierarchical_bootstrap_length_metrics(
-    pair_scores: pd.DataFrame,
-    *,
-    n_iterations: int = 5000,
-    seed: int = 20260721,
-    confidence_level: float = 0.95,
-) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Return (summary CI table, selection counts, pairwise probs)."""
+def pair_multiplicities(table, device_draw, challenge_draws, devices, challenges):
+    """Count eligible pairs in the explicitly expanded hierarchical sample.
+
+    Same-device pairs come from a single sampled device occurrence; different-device
+    pairs join distinct original devices and the same original challenge. Copies of
+    one original identity are never relabelled as different devices or challenges.
+    """
+    device_index = {d: i for i, d in enumerate(devices)}
+    challenge_index = {c: k for k, c in enumerate(challenges)}
+    counts = np.zeros((len(device_draw), len(challenges)), dtype=np.int64)
+    for slot, draw in enumerate(challenge_draws):
+        counts[slot] = np.bincount(draw, minlength=len(challenges))
+    node = np.zeros((len(devices), len(challenges)), dtype=np.int64)
+    within = np.zeros((len(devices), len(challenges), len(challenges)), dtype=np.int64)
+    for original_device, c in zip(device_draw, counts):
+        node[original_device] += c
+        within[original_device] += np.outer(c, c)
+    weights = []
+    for row in table.itertuples(index=False):
+        i, j = device_index[row.fiber_id], device_index[row.fiber_id_b]
+        k, l = challenge_index[row.challenge], challenge_index[row.challenge_b]
+        if row.score_type == 'S_intra':
+            if i != j or k != l: raise ValueError('Invalid genuine identity')
+            w = node[i, k]
+        elif row.score_type == 'S_inter_challenge':
+            if i != j or k == l: raise ValueError('Invalid inter-challenge identity')
+            w = within[i, k, l]
+        elif row.score_type == 'S_inter_device':
+            if i == j or k != l: raise ValueError('Invalid inter-device identity')
+            w = node[i, k] * node[j, k]
+        else:
+            raise ValueError(f'Unknown score type {row.score_type}')
+        weights.append(w)
+    return np.asarray(weights, dtype=np.int64)
+
+
+def _validate_pairs(table):
+    if not np.isfinite(table.score.to_numpy(float)).all():
+        raise ValueError('Nonfinite pair score')
+    devices = sorted(set(table.fiber_id) | set(table.fiber_id_b))
+    challenges = sorted(set(table.challenge) | set(table.challenge_b))
+    expected = {(SCORE_TYPES[0], d, c, d, c) for d in devices for c in challenges}
+    expected |= {(SCORE_TYPES[1], d, a, d, b) for d in devices for a,b in combinations(challenges, 2)}
+    expected |= {(SCORE_TYPES[2], a, c, b, c) for a,b in combinations(devices, 2) for c in challenges}
+    observed = list(zip(table.score_type, table.fiber_id, table.challenge, table.fiber_id_b, table.challenge_b))
+    if len(observed) != len(expected) or set(observed) != expected:
+        raise ValueError('Incomplete, repeated or noncanonical eligible pair identities')
+    return devices, challenges
+
+
+def bootstrap_replicates(pair_scores, *, n_iterations=5000, seed=20260721):
+    if n_iterations < 1: raise ValueError('n_iterations must be positive')
     rng = np.random.default_rng(seed)
-    lengths = sorted(int(x) for x in pair_scores["length_cm"].unique())
-    alpha = 1.0 - confidence_level
-    boot_rows = []
-    winners: list[int] = []
+    lengths = sorted(int(x) for x in pair_scores.length_cm.unique())
+    inputs = {}
+    for length in lengths:
+        table = pair_scores[pair_scores.length_cm == length].reset_index(drop=True)
+        devices,challenges = _validate_pairs(table)
+        inputs[length] = (table, devices, challenges)
+    rows = []
+    for iteration in range(n_iterations):
+        result = {'bootstrap_replicate': iteration + 1}
+        for length,(table,devices,challenges) in inputs.items():
+            device_draw = rng.choice(len(devices), size=len(devices), replace=True)
+            challenge_draws = [rng.choice(len(challenges), size=len(challenges), replace=True) for _ in device_draw]
+            weights = pair_multiplicities(table, device_draw, challenge_draws, devices, challenges)
+            scores = [np.repeat(table.loc[table.score_type == kind, 'score'].to_numpy(float), weights[table.score_type == kind]) for kind in SCORE_TYPES]
+            result[f'L{length}'] = (float(np.quantile(scores[0], .05) - max(np.quantile(scores[1], .95), np.quantile(scores[2], .95))) if all(len(x) for x in scores) else np.nan)
+            result[f'L{length}_genuine_pairs'] = len(scores[0])
+            result[f'L{length}_inter_challenge_pairs'] = len(scores[1])
+            result[f'L{length}_inter_device_pairs'] = len(scores[2])
+        complete = all(np.isfinite(result[f'L{x}']) for x in lengths)
+        result['complete_replicate'] = complete
+        result['selected_length_cm'] = min(lengths, key=lambda x: (-result[f'L{x}'], x)) if complete else np.nan
+        rows.append(result)
+    return pd.DataFrame(rows)
 
-    for it in tqdm(range(n_iterations), desc="Hierarchical bootstrap", unit="iter"):
-        vals = {}
 
-        for L in lengths:
-            sub = pair_scores.loc[pair_scores.length_cm == L]
-            fibers = sorted(sub["fiber_id"].dropna().unique().tolist())
-            if not fibers:
-                vals[L] = float("nan")
-                continue
-            # Layer 1: resample fibers
-            samp_f = rng.choice(fibers, size=len(fibers), replace=True)
-            pieces = []
-            for f in samp_f:
-                fsub = sub.loc[sub.fiber_id == f]
-                chans = sorted(
-                    set(fsub["challenge"].dropna().tolist())
-                    | set(fsub.get("challenge_b", pd.Series(dtype=str)).dropna().tolist())
-                )
-                # Prefer challenges appearing in S_intra
-                intra_ch = sorted(fsub.loc[fsub.score_type == "S_intra", "challenge"].unique())
-                pool = intra_ch if intra_ch else sorted(fsub["challenge"].dropna().unique())
-                if not pool:
-                    continue
-                samp_c = set(rng.choice(pool, size=len(pool), replace=True).tolist())
-                # Keep rows involving resampled challenges for this fiber
-                m = fsub["fiber_id"].eq(f) & (
-                    fsub["challenge"].isin(samp_c)
-                    | fsub.get("challenge_b", pd.Series(index=fsub.index)).isin(samp_c)
-                )
-                pieces.append(fsub.loc[m])
-            if not pieces:
-                vals[L] = float("nan")
-                continue
-            boot_sub = pd.concat(pieces, ignore_index=True)
-            vals[L] = _maximin_from_pairs(boot_sub)
-        boot_rows.append({"iteration": it, **{f"L{L}": vals[L] for L in lengths}})
-        finite = {L: v for L, v in vals.items() if np.isfinite(v)}
-        if finite:
-            # Prefer shorter length on ties
-            best_v = max(finite.values())
-            cands = [L for L, v in finite.items() if abs(v - best_v) < 1e-15]
-            winners.append(int(min(cands)))
-
-    boot_df = pd.DataFrame(boot_rows)
-    summary = []
-    for L in lengths:
-        col = f"L{L}"
-        arr = boot_df[col].to_numpy(float)
-        arr = arr[np.isfinite(arr)]
-        if arr.size == 0:
-            summary.append(
-                {
-                    "length_cm": L,
-                    "metric": "robust_gap_min",
-                    "mean": np.nan,
-                    "ci_low": np.nan,
-                    "ci_high": np.nan,
-                }
-            )
-            continue
-        summary.append(
-            {
-                "length_cm": L,
-                "metric": "robust_gap_min",
-                "mean": float(np.mean(arr)),
-                "ci_low": float(np.quantile(arr, alpha / 2)),
-                "ci_high": float(np.quantile(arr, 1 - alpha / 2)),
-            }
-        )
-    summary_df = pd.DataFrame(summary)
-
-    counts = Counter(winners)
-    sel_df = pd.DataFrame(
-        [
-            {
-                "length_cm": L,
-                "n_selected": int(counts.get(L, 0)),
-                "selection_probability": float(counts.get(L, 0) / max(len(winners), 1)),
-            }
-            for L in lengths
-        ]
-    )
-
-    # Pairwise: P(Li > Lj)
-    pair_rows = []
-    for i, Li in enumerate(lengths):
-        for Lj in lengths[i + 1 :]:
-            a = boot_df[f"L{Li}"].to_numpy(float)
-            b = boot_df[f"L{Lj}"].to_numpy(float)
-            m = np.isfinite(a) & np.isfinite(b)
-            if not m.any():
-                p = float("nan")
-            else:
-                p = float(np.mean(a[m] > b[m]))
-            pair_rows.append({"length_a_cm": Li, "length_b_cm": Lj, "p_a_gt_b": p})
-            pair_rows.append({"length_a_cm": Lj, "length_b_cm": Li, "p_a_gt_b": 1.0 - p if p == p else p})
-    pairwise_df = pd.DataFrame(pair_rows)
-    return summary_df, sel_df, pairwise_df
+def hierarchical_bootstrap_length_metrics(pair_scores, *, n_iterations=5000, seed=20260721, confidence_level=.95):
+    if not 0 < confidence_level < 1: raise ValueError('Invalid confidence level')
+    boot = bootstrap_replicates(pair_scores,n_iterations=n_iterations,seed=seed)
+    lengths=sorted(int(x) for x in pair_scores.length_cm.unique());alpha=1-confidence_level
+    complete=boot[boot.complete_replicate];summary=[];selection=[];pairwise=[]
+    for length in lengths:
+        values=boot[f'L{length}'].dropna().to_numpy(float)
+        summary.append({'length_cm':length,'metric':'robust_gap_min','mean':float(np.mean(values)) if len(values) else np.nan,'ci_low':float(np.quantile(values,alpha/2)) if len(values) else np.nan,'ci_high':float(np.quantile(values,1-alpha/2)) if len(values) else np.nan,'n_valid_replicates':len(values),'n_attempted_replicates':n_iterations})
+        n=int((complete.selected_length_cm==length).sum())
+        selection.append({'length_cm':length,'n_selected':n,'selection_probability':n/len(complete) if len(complete) else np.nan,'n_complete_replicates':len(complete),'n_attempted_replicates':n_iterations})
+    for a,b in combinations(lengths,2):
+        valid=boot[[f'L{a}',f'L{b}']].dropna()
+        for left,right in [(a,b),(b,a)]:
+            pairwise.append({'length_a_cm':left,'length_b_cm':right,'p_a_gt_b':float((valid[f'L{left}']>valid[f'L{right}']).mean()),'n_valid_replicates':len(valid)})
+    return pd.DataFrame(summary),pd.DataFrame(selection),pd.DataFrame(pairwise)

@@ -85,7 +85,7 @@ many hours and was not rerun for this release; its frozen outputs are the publis
 |---|---|
 | Eight-challenge bank C01-C08 | global seed 20260711 (m = 2 stream seed 20260711194) |
 | 128-challenge bank `m2_128_v1` | master seed 20260719; C009-C128 via `SeedSequence([20260719, index, attempt])` |
-| Fig. 4 hierarchical bootstrap | 20260721, B = 5000 |
+| Fig. 4 hierarchical bootstrap | 20260721, 5000 draws; 4967 complete replicates |
 | Fig. 5d / 5e device-level cluster bootstrap | 42 / 43, B = 10000 |
 | Fixed-state binary PUF bootstrap | 20260729 (grid), B = 5000 |
 | Formal experiment / attack models | RFF and MLP seed 20260721; challenge-bank bootstrap 20260721, B = 5000 |
@@ -106,7 +106,7 @@ the last decoded frame count (the pipelines trim fixed time margins and aggregat
 | Item | Values |
 |---|---|
 | Fig. 3 | $m = 2$ selected; $G(2) = 0.5595$, $G(4) = 0.5669$ |
-| Fig. 4 | $L = 9$ cm; $G_{\mathrm{min}}(9\,\mathrm{cm}) = 0.3897924079274487$; bootstrap 4991/5000; representative F01/C01 NCC = 0.8205578290959264; $H_{\mathrm{PSD}}$ complementary only |
+| Fig. 4 | $L = 9$ cm; $G_{\mathrm{min}}(9\,\mathrm{cm}) = 0.3897924079274487$; bootstrap 4956/4967 complete resamples from 5000 draws; representative F01/C01 NCC = 0.8205578290959264; $H_{\mathrm{PSD}}$ complementary only |
 | Fig. 5 | red 0.94, green 0.77 short-term repeatability; Fig. 5d/e CIs equal frozen tables |
 | Fig. 6 | red AUC 0.953651, EER 0.064286, $RG_R$ -0.204386030272718; Top-1 15/15, 119/120, joint 14/15; HD means 0.202 / 0.512 / 0.489 |
 | Fig. 7 | 77 Valid / 3 Partial / 0 Failed; $RG_C$ median 0.363; revocation margin 0.386; red medians -0.31 / -0.39 / -6.17; global red EER 0.096; held-out AUC 0.9834, EER 0.0996 |

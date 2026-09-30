@@ -29,6 +29,7 @@ data/threshold_development/README.md
 docs/ATTACK_MODELS.md
 docs/DATA_FORMAT.md
 docs/FIGURE_MAP.md
+docs/FIGURE_SOURCE_REPRODUCTION.md
 docs/PREPROCESSING.md
 docs/REPRODUCIBILITY.md
 environment.yml
@@ -36,12 +37,16 @@ examples/minimal_workflow.py
 pyproject.toml
 requirements.txt
 scripts/prepare_raw_workspace.py
+scripts/render_attack_figures.py
+scripts/render_credential_figures.py
 scripts/reproduce_fig3.py
 scripts/reproduce_fig4.py
 scripts/reproduce_fig5.py
 scripts/reproduce_fig6.py
 scripts/reproduce_fig7.py
 scripts/reproduce_fig8.py
+scripts/reproduce_length_bootstrap.py
+scripts/reproduce_length_from_raw.py
 scripts/reproduce_supp_fig_s2.py
 scripts/reproduce_supp_fig_s3.py
 scripts/reproduce_supp_fig_s4.py
@@ -241,6 +246,8 @@ src/puf_common/public_data.py
 src/puf_common/statistics.py
 src/puf_common/texture_features.py
 src/puf_common/tqdm_progress.py
+tests/test_length_bootstrap.py
+tests/test_partial_transfer_subset.py
 tests/test_publication_quality.py
 tests/test_threshold_publication.py
 tests/test_vector_provenance.py
