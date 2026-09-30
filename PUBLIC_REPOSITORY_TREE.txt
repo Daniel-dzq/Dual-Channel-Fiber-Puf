@@ -37,6 +37,7 @@ pyproject.toml
 requirements-reproduction.txt
 requirements.txt
 scripts/export_fixed_state_source.py
+scripts/export_formal_source.py
 scripts/export_length_representatives.py
 scripts/export_macro_pixel_source.py
 scripts/export_representative_fields.py
@@ -259,6 +260,7 @@ src/puf_common/public_data.py
 src/puf_common/statistics.py
 src/puf_common/texture_features.py
 src/puf_common/tqdm_progress.py
+tests/test_blocked_ncc.py
 tests/test_length_bootstrap.py
 tests/test_partial_transfer_subset.py
 tests/test_publication_quality.py

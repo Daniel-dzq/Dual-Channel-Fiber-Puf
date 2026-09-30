@@ -34,6 +34,7 @@ import numpy as np
 import pandas as pd
 
 from experiment4_security.ml_attack.batch_eval import (
+    pairwise_zero_mean_ncc_blocked,
     auc_eer_genuine_vs_negative,
     robust_gap_q05_minus_q95,
     row_zero_mean_ncc,
@@ -212,9 +213,7 @@ def score_predictions_against_target(
     P = _stack_f32(predictions, ids)
     Q = _stack_f32(Q_target, ids)
 
-    Pn = _row_normalize_f32(P.copy())
-    Qn = _row_normalize_f32(Q.copy())
-    sim = Pn @ Qn.T  # (n_hidden, n_hidden) float32
+    sim = pairwise_zero_mean_ncc_blocked(P, Q)
     scores = np.diag(sim).astype(np.float64)
     retrieval = _retrieval_from_pairwise(sim)
 

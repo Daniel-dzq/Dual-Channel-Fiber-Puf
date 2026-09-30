@@ -2,19 +2,20 @@
 
 ## Environment
 
-* Reference environment for the final analyses and for the smoke test of this repository:
-  Python 3.11.15, macOS 15 (Apple silicon); package versions in `requirements.txt`.
+* Raw-reproduction workflow environment: Python 3.12.14, macOS 15 (Apple silicon);
+  package versions in `requirements-reproduction.txt`. The historical Python
+  3.11.15 environment is preserved separately in `requirements.txt` and `environment.yml`.
   `pyproject.toml` declares the compatible ranges (Python >= 3.10). Linux is expected to work
   but was not tested.
 * Installation (either route):
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt      # pinned reference versions
+pip install -r requirements-reproduction.txt  # pinned raw-workflow versions
 pip install -e .                     # installs the packages under src/ (puf_common, e01, experiment00, ...)
 ```
 
-or `conda env create -f environment.yml && conda activate fiber-puf`.
+For the historical environment only, use `conda env create -f environment.yml && conda activate fiber-puf`.
 
 * Pure Python plus NumPy / SciPy / pandas / scikit-learn / OpenCV / matplotlib. No GPU, no
   deep-learning framework: the small MLP is `sklearn.neural_network.MLPRegressor`.

@@ -26,7 +26,19 @@ from experiment4_security.ml_attack.track_c_pl_partial_leakage import load_round
 
 REPO=Path(__file__).resolve().parents[1]
 IDS=[f'C{i:03}' for i in range(1,129)];STATES=[f'M{i}' for i in range(8)]
-def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
+def sha(p):
+ h=hashlib.sha256()
+ with p.open('rb') as f:
+  for block in iter(lambda:f.read(8*1024**2),b''):h.update(block)
+ return h.hexdigest()
+def stage_valid(directory,stage,identity):
+ marker=directory/(stage+'_COMPLETE.json')
+ if not marker.exists():return False
+ record=json.loads(marker.read_text())
+ return record['input_contract']==identity and all((directory/name).is_file() and sha(directory/name)==digest for name,digest in record['outputs'].items())
+def mark_stage(directory,stage,identity,names):
+ record={'input_contract':identity,'outputs':{name:sha(directory/name) for name in names}}
+ (directory/(stage+'_COMPLETE.json')).write_text(json.dumps(record,indent=2))
 def save(df,p):df.to_csv(p,index=False,compression='gzip' if p.suffix=='.gz' else None)
 def main():
  p=argparse.ArgumentParser(description=__doc__);p.add_argument('--data-root',type=Path,required=True);p.add_argument('--output-root',type=Path,required=True);p.add_argument('--devices',nargs='+',default=[f'F{i:02}' for i in range(1,11)]);p.add_argument('--workers',type=int,default=2);p.add_argument('--skip-attacks',action='store_true');a=p.parse_args()
@@ -45,10 +57,11 @@ def main():
  ip.write_text(json.dumps(identity,indent=2))
  for device in a.devices:
   d=out/device;d.mkdir(exist_ok=True)
-  if (d/'COMPLETE.json').exists():continue
+  required_tracks={'A','B'} if a.skip_attacks else {'A','B','C','D','C-PL','D-PL'}
+  if (d/'COMPLETE.json').exists() and required_tracks.issubset(json.loads((d/'COMPLETE.json').read_text())['tracks']):continue
   cache=d/'temporary_cache';vd=cache/'vectors';vd.mkdir(parents=True,exist_ok=True)
   subset=sorted([r for r in rows if r['device']==device],key=lambda r:(r['mechanical_state'],r['acquisition_round'],r['challenge']));assert len(subset)==2048
-  if shutil.disk_usage(out).free<18*1024**3:raise RuntimeError('Need at least 18 GiB free before starting a device')
+  if shutil.disk_usage(out).free+sum(f.stat().st_size for f in vd.glob('*.npy'))<18*1024**3:raise RuntimeError('Need at least 18 GiB free before starting a device')
   def decode(r):
    source=(root/r['release_path']).resolve();assert source.is_relative_to(root)
    if sha(source)!=r['sha256']:raise RuntimeError(f'Recording hash mismatch: {source}')
@@ -63,19 +76,32 @@ def main():
     f.write(json.dumps(r,default=str)+'\n');f.flush()
     if i%32==0:logging.info('%s decoded and verified %s/2048',device,i)
   def lookup(s,r,c):return np.load(vd/f'{device}_{s}_{r}_{c}.npy',mmap_mode='r')
-  commons=build_device_commons(device,STATES,IDS,detail_lookup=lookup)
-  ts,ss,meta=run_track_a(STATES,IDS,commons,detail_lookup=lookup,device_id=device);ts['device_id']=device;save(ts,d/'track_a_database_authentication_summary.csv');save(ss,d/'track_a_scores.csv.gz')
-  bs=[];bsc=[]
-  for source in STATES:
-   templates=enrollment_templates(commons[source],IDS,detail_lookup=lookup)
-   for target in STATES:
-    queries=query_vectors(commons[source],target,IDS,detail_lookup=lookup);ev=evaluate_cross_state_credential(templates,queries,IDS,device_id=device,source_state=source,target_state=target,genuine_same_state=meta['genuine_by_state'][source]);ev['summary_row']['device_id']=device;bs.append(ev['summary_row']);bsc+=ev['score_rows'];del queries
-   del templates;gc.collect();logging.info('%s Track B source %s complete',device,source)
-  save(pd.DataFrame(bs),d/'track_b_template_transfer_matrix_summary.csv');save(pd.DataFrame(bsc),d/'track_b_scores.csv.gz');del bsc,commons;gc.collect()
+  ab_names=['track_a_database_authentication_summary.csv','track_a_scores.csv.gz','track_b_template_transfer_matrix_summary.csv','track_b_scores.csv.gz']
+  if not stage_valid(d,'AB',identity):
+   commons=build_device_commons(device,STATES,IDS,detail_lookup=lookup)
+   ts,ss,meta=run_track_a(STATES,IDS,commons,detail_lookup=lookup,device_id=device);ts['device_id']=device;save(ts,d/'track_a_database_authentication_summary.csv');save(ss,d/'track_a_scores.csv.gz')
+   bs=[];bsc=[]
+   for source in STATES:
+    templates=enrollment_templates(commons[source],IDS,detail_lookup=lookup)
+    for target in STATES:
+     queries=query_vectors(commons[source],target,IDS,detail_lookup=lookup);ev=evaluate_cross_state_credential(templates,queries,IDS,device_id=device,source_state=source,target_state=target,genuine_same_state=meta['genuine_by_state'][source]);ev['summary_row']['device_id']=device;bs.append(ev['summary_row']);bsc+=ev['score_rows'];del queries
+    del templates;gc.collect();logging.info('%s Track B source %s complete',device,source)
+   save(pd.DataFrame(bs),d/'track_b_template_transfer_matrix_summary.csv');save(pd.DataFrame(bsc),d/'track_b_scores.csv.gz');del bsc,commons;gc.collect()
+   mark_stage(d,'AB',identity,ab_names)
+  genuine_table=pd.read_csv(d/'track_a_scores.csv.gz')
+  genuine_by_state={state:genuine_table[(genuine_table.source_state==state)&genuine_table.is_genuine]['score'].to_numpy() for state in STATES}
+  del genuine_table;gc.collect()
   if not a.skip_attacks:
-   cd=run_green_tracks_cd_multidevice([device],STATES,IDS,features,detail_lookups={device:lookup},genuine_by_device_state={device:meta['genuine_by_state']},models_cfg=cfg.models,pca_dimension=64,n_parallel_targets=1,checkpoint_dir=d/'cd_checkpoints')
-   for key,name in [('track_c_summary','track_c_same_state_clone_summary.csv'),('track_d_summary','track_d_clone_transfer_matrix_summary.csv'),('track_c_scores','track_c_scores.csv.gz'),('track_d_scores','track_d_scores.csv.gz')]:save(cd[key],d/name)
-   del cd;gc.collect()
+   cd_names=['track_c_same_state_clone_summary.csv','track_d_clone_transfer_matrix_summary.csv','track_c_scores.csv.gz','track_d_scores.csv.gz']
+   if not stage_valid(d,'CD',identity):
+    cd=run_green_tracks_cd_multidevice([device],STATES,IDS,features,detail_lookups={device:lookup},genuine_by_device_state={device:genuine_by_state},models_cfg=cfg.models,pca_dimension=64,n_parallel_targets=1,checkpoint_dir=d/'cd_checkpoints')
+    for key,name in [('track_c_summary','track_c_same_state_clone_summary.csv'),('track_d_summary','track_d_clone_transfer_matrix_summary.csv'),('track_c_scores','track_c_scores.csv.gz'),('track_d_scores','track_d_scores.csv.gz')]:save(cd[key],d/name)
+    del cd;gc.collect()
+    mark_stage(d,'CD',identity,cd_names)
+   for model in (d/'cd_checkpoints').rglob('track_c_predictors_*.joblib'):
+    record={'path':str(model.relative_to(out)),'bytes':model.stat().st_size,'sha256':sha(model),'reason':'C/D exports verified; temporary fitted predictor can be regenerated'}
+    with (out/'removed_temporary_models.jsonl').open('a') as log:log.write(json.dumps(record)+'\n')
+    model.unlink()
    # Persist one source/split at a time so a long model run can resume safely.
    parts=d/'partial';parts.mkdir(exist_ok=True)
    b={s:load_round_vectors(cache,device,s,'B',IDS) for s in STATES}
@@ -89,7 +115,7 @@ def main():
    del b;gc.collect()
    merged=pd.concat([pd.read_csv(f) for f in sorted(parts.glob('*.csv'))],ignore_index=True);save(merged,d/'track_d_pl_partial_leakage_transfer_summary.csv');save(merged[merged.is_diagonal].drop(columns=['target_state','is_diagonal']),d/'track_c_pl_partial_leakage_summary.csv')
   (d/'COMPLETE.json').write_text(json.dumps({'device':device,'raw_green_videos':2048,'tracks':['A','B']+([] if a.skip_attacks else ['C','D','C-PL','D-PL']),'cross_device_and_red_included':False},indent=2))
-  del meta;gc.collect();shutil.rmtree(cache)
+  del genuine_by_state;gc.collect();shutil.rmtree(cache)
   logging.info('%s COMPLETE; temporary raw-response cache removed',device)
  logging.info('Requested device stages complete. Cross-device and red stages are separate.')
 if __name__=='__main__':main()

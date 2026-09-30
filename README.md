@@ -59,13 +59,15 @@ examples/      minimal_workflow.py
 
 ## Installation
 
-Python 3.11.15 is the reference version (Python >= 3.10 supported).
+For the raw workflows documented here, use Python 3.12.14 and
+`requirements-reproduction.txt`. The older `requirements.txt` and
+`environment.yml` preserve the historical environment; do not mix the two dependency sets.
 
 ```bash
 git clone https://github.com/Daniel-dzq/Dual-Channel-Fiber-Puf.git
 cd Dual-Channel-Fiber-Puf
 python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements-reproduction.txt
 pip install -e .
 ```
 
@@ -77,12 +79,13 @@ python scripts/verify_public_data.py --data-root "$PUF_DATA_ROOT"
 python scripts/reproduce_threshold_development.py --data-root "$PUF_DATA_ROOT"
 ```
 
-Numerical validation results are written to `./outputs/<figure>/` (`--output-root` to change). Every reproduction
-script accepts `--data-root`, `--output-root` and `--no-figures`.
+Numerical validation results are written to `./outputs/<figure>/` (`--output-root` to change). The lightweight figure checks listed below accept `--data-root`,
+`--output-root` and `--no-figures`; raw workflows have their own documented arguments.
 
 ## Reproducing figures
 
-The figure commands below require their validated source-data inputs, which are not yet supplied in the manifest-format candidate. Lightweight mode recomputes the reported quantities from the Source Data and
+The figure commands below read the supplied `Source_Data/` and `processed_data/`
+archives. Lightweight mode recomputes the reported quantities from the Source Data and
 analysis-ready tables without decoding any video. Raw mode re-runs the preprocessing from the
 recordings; it needs the `raw_*.zip` archives and considerably more time and storage
 ([docs/REPRODUCIBILITY.md](docs/REPRODUCIBILITY.md)).

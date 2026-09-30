@@ -38,6 +38,33 @@ def pairwise_zero_mean_ncc(A: np.ndarray, B: np.ndarray) -> np.ndarray:
     return center_normalize_rows(A) @ center_normalize_rows(B).T
 
 
+def pairwise_zero_mean_ncc_blocked(A: np.ndarray, B: np.ndarray, *, block_size: int = 65536) -> np.ndarray:
+    """Float64 NCC without materializing full float64 response matrices.
+
+    Long float32 dot products can depend on the BLAS reduction path. Center,
+    accumulate norms, and multiply in float64, using bounded coordinate blocks.
+    Constant responses have score zero, matching the scalar NCC definition.
+    """
+    A, B = np.asarray(A), np.asarray(B)
+    if A.ndim != 2 or B.ndim != 2 or A.shape[1] != B.shape[1]:
+        raise ValueError("NCC requires two matrices with matching vector lengths")
+    if block_size <= 0 or A.shape[1] == 0:
+        raise ValueError("NCC requires positive block size and nonempty vectors")
+    am = A.mean(axis=1, dtype=np.float64)[:, None]
+    bm = B.mean(axis=1, dtype=np.float64)[:, None]
+    products = np.zeros((len(A), len(B)), dtype=np.float64)
+    an = np.zeros(len(A), dtype=np.float64)
+    bn = np.zeros(len(B), dtype=np.float64)
+    for start in range(0, A.shape[1], block_size):
+        ac = A[:, start:start + block_size].astype(np.float64) - am
+        bc = B[:, start:start + block_size].astype(np.float64) - bm
+        products += ac @ bc.T
+        an += np.einsum("ij,ij->i", ac, ac)
+        bn += np.einsum("ij,ij->i", bc, bc)
+    denom = np.sqrt(an)[:, None] * np.sqrt(bn)[None, :]
+    return np.divide(products, denom, out=np.zeros_like(products), where=denom > 0)
+
+
 def row_zero_mean_ncc(preds: np.ndarray, meas: np.ndarray) -> np.ndarray:
     preds_c = preds - preds.mean(axis=1, keepdims=True)
     meas_c = meas - meas.mean(axis=1, keepdims=True)

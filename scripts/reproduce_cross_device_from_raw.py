@@ -13,7 +13,7 @@ from experiment4_security.ml_attack.config import MLAttackConfig
 from experiment4_security.ml_attack.video_preprocessing import process_and_cache_clip
 from experiment4_security.identity_credential.vector_provenance import response_provenance,cache_matches,write_provenance
 from experiment4_security.ml_attack.enrollment import fit_enrollment_common
-from experiment4_security.ml_attack.batch_eval import row_zero_mean_ncc
+from puf_common.ncc import zero_mean_ncc
 from experiment4_security.identity_credential.green_multidevice_metrics import evaluate_device_mismatch_for_state
 REPO=Path(__file__).resolve().parents[1]
 def sha(p):
@@ -22,13 +22,13 @@ def sha(p):
   for chunk in iter(lambda:f.read(8*1024**2),b''):h.update(chunk)
  return h.hexdigest()
 def main():
- p=argparse.ArgumentParser(description=__doc__);p.add_argument('--data-root',type=Path,required=True);p.add_argument('--output',type=Path,required=True);p.add_argument('--workers',type=int,default=2);a=p.parse_args();root=a.data_root.resolve();out=a.output.resolve();out.mkdir(parents=True,exist_ok=True);cv2.setNumThreads(1);logging.basicConfig(level=logging.INFO,format='%(asctime)s %(message)s')
+ p=argparse.ArgumentParser(description=__doc__);p.add_argument('--data-root',type=Path,required=True);p.add_argument('--output',type=Path,required=True);p.add_argument('--workers',type=int,default=2);p.add_argument('--states',nargs='+',choices=[f'M{i}' for i in range(8)],default=[f'M{i}' for i in range(8)]);a=p.parse_args();root=a.data_root.resolve();out=a.output.resolve();out.mkdir(parents=True,exist_ok=True);cv2.setNumThreads(1);logging.basicConfig(level=logging.INFO,format='%(asctime)s %(message)s')
  rows=[r for r in csv.DictReader((root/'MANIFEST.csv').open()) if r['dataset']=='formal_mechanical_reconfiguration' and r['optical_channel']=='green'];assert len(rows)==20480
  mask=np.load(root/'masks/threshold_development_and_formal_valid_pixel_mask.npy').astype(bool);cfg=MLAttackConfig.from_yaml(REPO/'configs/formal_green_preprocessing.yaml');ids=[f'C{i:03}' for i in range(1,129)];devices=[f'F{i:02}' for i in range(1,11)]
  contract={'manifest':sha(root/'MANIFEST.csv'),'mask':sha(root/'masks/threshold_development_and_formal_valid_pixel_mask.npy'),'config':sha(REPO/'configs/formal_green_preprocessing.yaml'),'source':hashlib.sha256(''.join(str(f.relative_to(REPO))+sha(f) for f in sorted((REPO/'src').rglob('*.py'))).encode()).hexdigest()};cp=out/'input_contract.json'
  if cp.exists() and json.loads(cp.read_text())!=contract:raise RuntimeError('Input/code changed; use a fresh output directory')
  cp.write_text(json.dumps(contract,indent=2))
- for state in [f'M{i}' for i in range(8)]:
+ for state in a.states:
   d=out/state;d.mkdir(exist_ok=True)
   if (d/'COMPLETE.json').exists():continue
   cache=d/'temporary_vectors';cache.mkdir(exist_ok=True)
@@ -53,7 +53,7 @@ def main():
   for dev in devices:
    co=fit_enrollment_common(state,ids,detail_lookup=lookups[dev],device_id=dev);commons[dev,state]=co
    # Score each matching challenge separately, avoiding an additional full matrix.
-   genuine[dev]=np.array([row_zero_mean_ncc(co.to_detail_cm(lookups[dev](state,'A',c))[None,:],co.to_detail_cm(lookups[dev](state,'B',c))[None,:])[0] for c in ids]);gc.collect()
+   genuine[dev]=np.array([zero_mean_ncc(co.to_detail_cm(lookups[dev](state,'A',c)),co.to_detail_cm(lookups[dev](state,'B',c))) for c in ids]);gc.collect()
   result=evaluate_device_mismatch_for_state(state_id=state,challenge_ids=ids,devices=devices,commons=commons,detail_lookups=lookups,genuine_by_device=genuine)
   assert len(result['score_rows'])==11520
   pd.DataFrame(result['score_rows']).to_csv(d/'scores.csv.gz',index=False,compression='gzip');pd.DataFrame([result['summary']]).to_csv(d/'summary.csv',index=False)

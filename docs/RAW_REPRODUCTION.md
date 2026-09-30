@@ -34,9 +34,11 @@ python scripts/reproduce_cross_device_from_raw.py --data-root "$DATA" --output "
 Formal green reproduction processes one device at a time, retaining its fresh
 response vectors through complete and partial disclosure attacks. It records
 input/code fingerprints and recording hashes. Per-device completion explicitly
-excludes cross-device green scores and red identity. Model checkpoints consume
-additional disk space. Only completed disposable predictors may be removed;
-retain source recordings, score tables, and provenance.
+excludes cross-device green scores and red identity. The runner removes disposable fitted predictors after recording their hashes and
+verifying the saved C/D score tables. Completed authentication and attack stages
+have output checksums and can resume without refitting. Temporary response
+vectors are removed after all requested tracks for the device finish. Retain
+source recordings, score tables, and provenance.
 
 The fixed-state analysis includes historical overlapping-window diagnostics.
 Fig. 6(f) uses export_fixed_state_source.py: W1+W2 enrollment, W3 query, and
@@ -51,3 +53,19 @@ ACF-condition bootstrap calls.
 Export numerical source tables from the new runs before running lightweight
 checks. Passing those checks alone does not establish full raw reproduction.
 Raw-data computation and reconstruction from stored score tables are separate workflows.
+
+After all ten formal devices and eight cross-device states finish, export the
+publication tables from their new results (the exporter rejects missing or
+duplicate evaluation units):
+
+```bash
+python scripts/export_formal_source.py --formal-root "$RUN/formal_green" --cross-device-root "$RUN/cross_device" --red-root "$RUN/formal_red" --output "$RUN/formal_publication"
+```
+
+The final cross-device robust gaps use the float64 genuine scores from the
+authentication run and the independently computed cross-device score tables.
+Partial-disclosure attack NCC and retrieval use bounded-memory float64
+accumulation. Stored response vectors and fitted-model predictions retain their
+original float32 representation. This avoids long float32 dot-product reduction
+differences across numerical backends; tiny floating-point differences can still
+remain. The exporter does not substitute historical scores for new results.
