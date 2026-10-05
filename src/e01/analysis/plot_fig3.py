@@ -769,7 +769,7 @@ def plot_fig3d(cache: dict[str, Any], output_dir: Path) -> None:
     ax.set_box_aspect(1)
     ax.legend(
         handles=[
-            mpl.patches.Patch(facecolor=INTRA_COLOR, alpha=0.7, label="Genuine score"),
+            mpl.patches.Patch(facecolor=INTRA_COLOR, alpha=0.7, label="Matched score"),
             mpl.patches.Patch(facecolor=INTER_COLOR, alpha=0.7, label="Challenge-mismatch score"),
         ],
         loc="lower center",
@@ -817,7 +817,7 @@ def plot_fig3e(cache: dict[str, Any], output_dir: Path) -> None:
 
     ax_top.scatter(
         x, q05, s=88, color=INTRA_COLOR, edgecolors="white", linewidths=1.2,
-        zorder=4, label=r"$Q_{5\%}(\mathrm{Genuine})$",
+        zorder=4, label=r"$Q_{5\%}(\mathrm{Matched})$",
     )
     ax_top.scatter(
         x, q95, s=88, color=INTER_COLOR, edgecolors="white", linewidths=1.2,

@@ -60,7 +60,7 @@ def generate_lifecycle_figures(
             if len(s):
                 ax.hist(s, bins=30, alpha=0.55, label=group.replace("_", " "), color=color)
         ax.axvline(thresholds.get("tau_G", np.nan), color="k", ls="--", lw=1)
-        ax.set_xlabel(r"$S_G$")
+        ax.set_xlabel(r"$q_G$")
         ax.set_ylabel("Count")
         ax.legend(frameon=False, fontsize=8)
         _save(fig, out_dir / "green_score_distributions")
@@ -73,7 +73,7 @@ def generate_lifecycle_figures(
             ax.scatter(piv["device_id_a"], piv["score"], c=COLORS["accent"], s=28)
             ax.axhline(thresholds.get("tau_G", np.nan), color="k", ls="--", lw=1)
             ax.set_xlabel("Device")
-            ax.set_ylabel("Cross-state median $S_G$")
+            ax.set_ylabel("Cross-state median $q_G$")
             plt.xticks(rotation=45, ha="right")
             _save(fig, out_dir / "cross_state_revocation_matrix")
 
