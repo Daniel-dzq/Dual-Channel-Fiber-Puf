@@ -52,7 +52,7 @@ def plot(rep: pd.DataFrame, fwhm: pd.DataFrame, fc: pd.DataFrame, out) -> None:
     axes[0].set(xlabel="Device", ylabel="Short-term NCC (device median)", ylim=(0, 1.02), title="Fig. 5b  short-term repeatability")
     axes[0].tick_params(axis="x", rotation=90, labelsize=7)
     axes[0].legend(fontsize=8)
-    for ax, table, ylabel, title in ((axes[1], fwhm, "Radial ACF FWHM (px)", "Fig. 5d"), (axes[2], fc, "PSD centroid $f_c$ (cycles/px)", "Fig. 5e")):
+    for ax, table, ylabel, title in ((axes[1], fwhm, "Radial ACF FWHM (pixels)", "Fig. 5d"), (axes[2], fc, "PSD centroid $f_c$ (cycles/px)", "Fig. 5e")):
         for wl, color in ((532, "tab:green"), (650, "tab:red")):
             t = table[table.wavelength_nm == wl]
             x = np.array([0, 1]) + (0.05 if wl == 650 else -0.05)

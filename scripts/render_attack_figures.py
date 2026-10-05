@@ -37,7 +37,7 @@ def letter(ax,s):ax.text(-.16,1.07,f'({s})',transform=ax.transAxes,fontsize=11,v
 def matrix(df,col):return df.groupby(['source_state','target_state'])[col].median().unstack().reindex(index=STATES,columns=STATES)
 def heat(ax,m,title):
     im=ax.imshow(m.to_numpy(),cmap='RdBu',norm=NORM,aspect='auto')
-    ax.set(xticks=range(8),xticklabels=STATES,yticks=range(8),yticklabels=STATES,xlabel='Target mechanical state',ylabel='Source mechanical state',title=title)
+    ax.set(xticks=range(8),xticklabels=STATES,yticks=range(8),yticklabels=STATES,xlabel='Target state',ylabel='Source state',title=title)
     for i in range(8):
         for j in range(8):
             v=m.iloc[i,j];ax.text(j,i,('0.00' if abs(v)<.005 else f'{v:.2f}'),ha='center',va='center',fontsize=6.6,color='white' if v>.6 or v<-.07 else '#222')
@@ -118,9 +118,9 @@ for i,method in enumerate(FULL):
     vals=c[c.attack_method==method].median_S_A.to_numpy();ax.scatter(np.full(len(vals),i),vals,s=8,alpha=.45,color=COLORS[method],edgecolors='none')
     ax.plot([i-.18,i+.18],[np.median(vals)]*2,color=COLORS[method],lw=1.8)
     n=int(c[c.attack_method==method].source_state_valid.sum());ax.text(i,1.085,f'{n}/80',ha='center',color=GREEN if n else '#555',fontsize=7.5)
-ax.text(5.75,.965,r'Genuine $q_G$: $Q_{5\%}$–$Q_{95\%}$',ha='right',color=GREEN,fontsize=7.5)
+ax.text(5.75,.965,r'matched $q_G$: $Q_{5\%}$–$Q_{95\%}$',ha='right',color=GREEN,fontsize=7.5)
 ax.set(xticks=range(6),xticklabels=['Mean-\nresponse\nbaseline','Exact\nreplay','Ridge','Kernel\nRidge','RFF\nRidge','Small\nMLP'],ylabel=r'Attack score $S_A$',xlabel='Attack method',ylim=(-.05,1.12),xlim=(-.5,5.9));letter(ax,'a')
-sg=gs[0,1].subgridspec(2,1,height_ratios=[1.45,1],hspace=.62);ax=fig.add_subplot(sg[0]);heat(ax,mats['exact_template_replay'],'Exact replay');ax.tick_params(labelsize=6.5);ax.set_xlabel('Target mechanical state',fontsize=8);ax.set_ylabel('Source mechanical state',fontsize=8);letter(ax,'b')
+sg=gs[0,1].subgridspec(2,1,height_ratios=[1.45,1],hspace=.62);ax=fig.add_subplot(sg[0]);heat(ax,mats['exact_template_replay'],'Exact replay');ax.tick_params(labelsize=6.5);ax.set_xlabel('Target state',fontsize=8);ax.set_ylabel('Source state',fontsize=8);letter(ax,'b')
 ax=fig.add_subplot(sg[1])
 for i,r in enumerate(summary.itertuples()):
     y=4-i;ax.plot([r.cross,r.same],[y,y],color='#D0DCE6',lw=1);ax.plot(r.same,y,'o',ms=4,color=BLUE);ax.plot(r.cross,y,'o',ms=4,mfc='white',mec=RED);ax.text(1.08,y,f'{r.gap:.2f}',ha='center',va='center',fontsize=7)
@@ -130,7 +130,7 @@ for method in PART:
     t=curves[curves.attack_method==method];ax.plot(t.leak_size,t.median_S_A_partial,'o-',ms=3,lw=1,color=COLORS[method],label=NAMES[method])
 ax.axhline(0,color='#CDD6DF',ls=':',lw=.8);ax.set(xticks=[16,32,64,96],xticklabels=[],ylabel='Hidden-challenge\n'+r'attack score $S_A$',ylim=(-.135,.025));letter(ax,'c')
 ax.legend(loc='lower left',bbox_to_anchor=(-.06,1.02),ncol=2,frameon=False,fontsize=6.4,columnspacing=.8,handlelength=1.3)
-ax.text(.98,.96,rf'Genuine $q_G$ median: {hidden.median():.2f}',transform=ax.transAxes,ha='right',va='top',color=GREEN,fontsize=7.5)
+ax.text(.98,.96,rf'matched $q_G$ median: {hidden.median():.2f}',transform=ax.transAxes,ha='right',va='top',color=GREEN,fontsize=7.5)
 ax=fig.add_subplot(sg[1]);lift=curves.pivot(index='attack_method',columns='leak_size',values='normalized_retrieval_lift').reindex(PART)
 ax.imshow(lift,cmap=matplotlib.colors.LinearSegmentedColormap.from_list('lift',['#FBE4E4','#E1F0DF']),vmin=0,vmax=1,aspect='auto')
 for i in range(6):
@@ -141,13 +141,13 @@ for i,row in enumerate(figure_rows):
     y=9-i if i<5 else 7-i
     ax.plot([row['cross_state'],row['same_state']],[y,y],color='#D0DCE6',lw=1);ax.plot(row['same_state'],y,'o',color=GREEN,ms=4);ax.plot(row['cross_state'],y,'o',mfc='white',mec=RED,ms=4)
 ax.set(yticks=[9,8,7,6,5,2,1,0],yticklabels=[NAMES[r['method']] for r in figure_rows],xlabel=r'Median attack score $S_A$',xlim=(-.14,1.02),ylim=(-.8,11))
-ax.text(.99,.99,r'Genuine $q_G$: $Q_{5\%}$–$Q_{95\%}$',transform=ax.transAxes,ha='right',va='top',color=GREEN,fontsize=7)
+ax.text(.99,.99,r'matched $q_G$: $Q_{5\%}$–$Q_{95\%}$',transform=ax.transAxes,ha='right',va='top',color=GREEN,fontsize=7)
 ax.text(.04,10.1,'Complete database disclosure',color=GREEN,fontsize=8);ax.text(.04,3.2,'Partial CRP disclosure (96/128)',color=RED,fontsize=8)
 ax.axvspan(*band,ymin=.38,ymax=1,color=GREEN,alpha=.12);ax.legend(handles=[Line2D([],[],marker='o',color=GREEN,lw=0,label='Same-state'),Line2D([],[],marker='o',color=RED,mfc='white',lw=0,label='Cross-state')],loc='lower right',fontsize=7,frameon=False)
 save(fig,'Fig8')
 
 fig,axs=plt.subplots(2,2,figsize=(7.6,6.5),layout='constrained',gridspec_kw={'height_ratios':[1.2,1]})
-im=heat(axs[0,0],partialmatrix,'Ridge: 96/128 disclosed');fig.colorbar(im,ax=axs[0,0],fraction=.045,pad=.02,label=r'Attack score $S_A$');axs[0,0].text(.5,-.24,f'10 devices × 5 partitions; 32 hidden challenges\nGenuine hidden-response reference: {ref:.3f}',ha='center',va='top',transform=axs[0,0].transAxes,fontsize=7)
+im=heat(axs[0,0],partialmatrix,'Ridge: 96/128 disclosed');fig.colorbar(im,ax=axs[0,0],fraction=.045,pad=.02,label=r'Attack score $S_A$');axs[0,0].text(.5,-.24,f'10 devices × 5 partitions; 32 hidden challenges\nMatched hidden-response reference: {ref:.3f}',ha='center',va='top',transform=axs[0,0].transAxes,fontsize=7)
 specs=[('retained_pca_dimension',r'Retained PCA dimension $d_{\mathrm{PCA}}$',(0,70)),('median_unit_mean_residual_ncc','Median residual NCC',(-.04,.04)),('common_dominated_evaluation_fraction','Fraction of common-dominated\nevaluations',(-.04,1.04))]
 for ax,(col,ylabel,ylim) in zip([axs[0,1],axs[1,0],axs[1,1]],specs):
     for method,marker in zip(FULL[2:],['^','D','v','P']):

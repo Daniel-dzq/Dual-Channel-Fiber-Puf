@@ -188,14 +188,16 @@ def draw_fig5d(device_df: pd.DataFrame, out_png: Path, out_pdf: Path, out_svg: P
         )
     ax.set_xlim(-0.3, 1.45)
     ax.set_xticks([0, 1], ["Axial", "Lateral"])
-    ax.set_ylabel("radial ACF FWHM (pixels)", fontsize=FS_LABEL)
+    ax.set_ylabel("Radial ACF FWHM (pixels)", fontsize=FS_LABEL)
     ax.tick_params(labelsize=FS_TICK)
     ax.yaxis.set_major_formatter(plt.FormatStrFormatter("%.0f"))
-    ax.text(
-        0.98, 0.985, "n = 5 devices",
-        transform=ax.transAxes, fontsize=FS_ANNOT - 0.5,
-        color=GRAY_MID, va="top", ha="right",
-    )
+    from matplotlib.lines import Line2D
+    individual = Line2D([], [], color="#B4B4B4", marker="o", markersize=2.6, linewidth=0.7)
+    median_ci = ax.errorbar([], [], yerr=[], color="#777777", marker="o", markersize=3,
+                            capsize=2.2, linewidth=1)
+    ax.legend([individual, median_ci], ["Individual fibers", "Median (95% bootstrap CI)"],
+              loc="upper right", frameon=False, fontsize=4.8,
+              handlelength=0.9, handletextpad=0.35, borderaxespad=0.1)
     for sp in ax.spines.values():
         sp.set_linewidth(0.6)
     fig.tight_layout()

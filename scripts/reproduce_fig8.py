@@ -43,7 +43,7 @@ def plot(same_state: pd.DataFrame, replay: pd.DataFrame, partial: pd.DataFrame, 
     fig, axes = plt.subplots(1, 3, figsize=(13, 3.9))
     data = [same_state.loc[same_state.attack_method == m, "median_S_A"].to_numpy() for m in METHOD_ORDER]
     axes[0].boxplot(data, tick_labels=[ATTACK_LABELS[m] for m in METHOD_ORDER], showfliers=False)
-    axes[0].axhline(float(same_state.median_genuine.median()), color="tab:green", ls="--", lw=0.9, label="genuine S_intra median")
+    axes[0].axhline(float(same_state.median_genuine.median()), color="tab:green", ls="--", lw=0.9, label=r"matched $q_G$ median")
     axes[0].set(ylabel="Median attack score $S_A$ per unit", title="Fig. 8a  complete disclosure (128 CRPs)")
     axes[0].tick_params(axis="x", rotation=30, labelsize=7)
     axes[0].legend(fontsize=7)
@@ -53,7 +53,7 @@ def plot(same_state: pd.DataFrame, replay: pd.DataFrame, partial: pd.DataFrame, 
     for m, color in (("Ridge", "tab:blue"), ("Kernel Ridge", "tab:orange"), ("RFF Ridge", "tab:purple"), ("Small MLP", "tab:brown")):
         s = partial[partial.attack_method == m].groupby("N_L")["median_S_A"].median()
         axes[2].plot(s.index, s.values, "o-", color=color, label=m)
-    axes[2].axhline(float(partial.genuine_hidden_reference.median()), color="tab:green", ls="--", lw=0.9, label="genuine hidden reference")
+    axes[2].axhline(float(partial.genuine_hidden_reference.median()), color="tab:green", ls="--", lw=0.9, label="matched hidden reference")
     axes[2].set(xlabel="Disclosed CRPs $N_L$ (of 128)", ylabel="Median hidden-response $S_A$", xticks=EXPECTED["leak_sizes"], title="Fig. 8c  partial disclosure")
     axes[2].legend(fontsize=7)
     fig.tight_layout()
