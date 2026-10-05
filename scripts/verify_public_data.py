@@ -9,6 +9,7 @@ import collections
 import csv
 import hashlib
 import json
+import os
 from pathlib import Path
 
 EXPECTED = {'formal_mechanical_reconfiguration': 20640, 'threshold_development': 765,
@@ -46,10 +47,21 @@ def verify(root):
         p = member(root, r['release_path'])
         if not p.is_file() or p.stat().st_size != int(r['file_size']) or digest(p) != r['sha256']:
             errors.append({'quantity': 'recording_integrity', 'path': r['release_path']})
-    files = {str(p.relative_to(root)) for p in (root / 'raw_data').rglob('*') if p.is_file()}
-    if files != set(paths):
-        errors.append({'quantity': 'manifest_coverage', 'unlisted': sorted(files-set(paths)),
-                       'missing': sorted(set(paths)-files)})
+    auxiliary_paths = set()
+    with (root / 'metadata/characterization_file_manifest.csv').open(newline='') as stream:
+        for row in csv.DictReader(stream):
+            name = row['release_path']
+            p = member(root, name)
+            if not name.startswith('raw_data/fabrication_characterization/') or name in auxiliary_paths:
+                errors.append({'quantity': 'characterization_manifest', 'path': name})
+            auxiliary_paths.add(name)
+            if not p.is_file() or p.stat().st_size != int(row['size_bytes']) or digest(p) != row['sha256']:
+                errors.append({'quantity': 'characterization_integrity', 'path': name})
+    expected_raw = set(paths) | auxiliary_paths
+    files = {str(Path(base, name).relative_to(root)) for base, dirs, names in os.walk(root / 'raw_data', followlinks=True) for name in names if name != '.DS_Store'}
+    if files != expected_raw:
+        errors.append({'quantity': 'manifest_coverage', 'unlisted': sorted(files-expected_raw),
+                       'missing': sorted(expected_raw-files)})
     listed = set()
     for line in (root / 'CHECKSUMS.sha256').read_text().splitlines():
         if not line.strip():
@@ -60,8 +72,7 @@ def verify(root):
         if name in listed or not p.is_file() or digest(p) != sha:
             errors.append({'quantity': 'package_checksum', 'path': name})
         listed.add(name)
-    expected_files = {str(p.relative_to(root)) for p in root.rglob('*')
-                      if p.is_file() and p.name != 'CHECKSUMS.sha256'}
+    expected_files = {str(Path(base, name).relative_to(root)) for base, dirs, names in os.walk(root, followlinks=True) for name in names if name not in ('CHECKSUMS.sha256', '.DS_Store')}
     if listed != expected_files:
         errors.append({'quantity': 'checksum_coverage', 'unlisted': sorted(expected_files-listed),
                        'missing': sorted(listed-expected_files)})

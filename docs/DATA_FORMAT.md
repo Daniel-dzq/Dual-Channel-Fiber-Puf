@@ -68,3 +68,5 @@ stored in `fiber_id_9d/lifecycle/threshold_development.json` (`tau_G_frozen`, `n
 `data/challenge_patterns/mp002/mp002_C01..C08.png` are the canonical eight-challenge canvases
 (1024 x 768, active 512 x 512 at offset (256, 128)). The dataset supplies complete threshold-development score tables in
 `processed_data/threshold_development/`.
+
+Nonvideo fabrication and characterization inputs (AFM matrices, microscopy images, the side-view photograph and measured-depth workbook) are enumerated in `metadata/characterization_file_manifest.csv`. `MANIFEST.csv` enumerates camera recordings. Both inventories are checked, together with the full package checksums. Compatibility directories under `analysis_ready_data/` contain the same data as their processed-data counterparts; the distributed ZIP stores these as ordinary files.
