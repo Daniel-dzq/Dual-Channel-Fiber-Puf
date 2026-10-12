@@ -84,8 +84,9 @@ Numerical validation results are written to `./outputs/<figure>/` (`--output-roo
 
 ## Reproducing figures
 
-The figure commands below read the supplied `Source_Data/` and `processed_data/`
-archives. Lightweight mode recomputes the reported quantities from the Source Data and
+The figure commands below use the figure source data and analysis tables supplied in
+`Source_Data.zip` and `processed_data.zip`, respectively. Extract these archives into
+the same dataset directory before running the commands. Lightweight mode recomputes the reported quantities from the Source Data and
 analysis-ready tables without decoding any video. Raw mode re-runs the preprocessing from the
 recordings; it needs the `raw_*.zip` archives and considerably more time and storage
 ([docs/REPRODUCIBILITY.md](docs/REPRODUCIBILITY.md)).
@@ -157,9 +158,9 @@ The formal experiment requires 128 independent Round-A/Round-B pairs per deviceâ
 Raw-response caches are reusable only when the recording SHA-256, valid-pixel mask,
 preprocessing parameters, software versions and cached response hash match. Formal
 analysis starts a separate run so that summary checkpoints cannot outlive their inputs.
-Table-level figure checks validate derived tables; they do not establish reproduction
-from recordings. A complete release additionally requires raw-to-response provenance
-and successful isolated reproduction against the manuscript and Supplementary Information.
+The dataset includes `MANIFEST.csv` and `CHECKSUMS.sha256` for file identification
+and integrity checking. Figure source data and analysis tables are provided separately
+from the raw recordings so that the appropriate inputs can be selected for each workflow.
 
 ## Citation
 
